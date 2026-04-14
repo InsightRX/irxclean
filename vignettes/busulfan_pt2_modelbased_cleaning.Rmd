@@ -1,0 +1,246 @@
+---
+title: "Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width = 8,
+  fig.height = 5
+)
+library(irxclean)
+```
+
+## Overview
+
+> **Prerequisites:** This vignette continues from **Part 1**
+> (`busulfan_pt1_gc_exclusion`).  Run Part 1 first and save
+> `busulfan_pt1_ready.csv` to your working directory before proceeding here.
+> Part 1 covers dataset loading, concentration visualisation, gross QC with
+> `assess_data_quality()`, covariate anomaly investigation, and structured
+> exclusion criteria.
+
+This vignette walks through the **model-informed** cleaning stages of an
+`irxclean` analysis using the simulated busulfan pharmacokinetic dataset.  It
+covers Phase 2 of the full workflow: NONMEM-based iterative observation
+flagging, parameter stability assessment, demographic comparison, and HTML
+report generation.
+
+### Intentional errors remaining after Phase 1
+
+After Part 1 removes the subject with a weight decimal error (ID 18), the
+following errors remain in the dataset for the model to detect:
+
+| FLAG bit | Error type | Count |
+|---|---|---|
+| 2 | Concentration IQR outlier (>3\*IQR above Q3 per TAD bin) | 2 observations |
+| 4 | Timing error (+/- 5, 10, 30, or 60 minutes from true time) | 10 observations |
+| 8 | Concentration magnitude error (multipliers 0.25--1.75x) | 10 observations |
+
+---
+
+## 1. Load the Phase 1 dataset
+
+Load `busulfan_pt1_ready.csv` saved at the end of Part 1.  If that file is
+not present in the working directory (e.g. when rendering from the package
+without running Part 1 first), the raw simulated dataset is used as a
+fallback — note that in this case one extra subject (ID 18) with a covariate
+error remains in the data.
+
+```{r load-data}
+pt1_file <- "busulfan_pt1_ready.csv"
+
+if (file.exists(pt1_file)) {
+  dat <- read.csv(pt1_file)
+  message("Loaded Phase 1 output: ", pt1_file)
+} else {
+  message(
+    "busulfan_pt1_ready.csv not found -- falling back to raw dataset.\n",
+    "Run busulfan_pt1_gc_exclusion first to generate the cleaned input."
+  )
+  dat <- read.csv(system.file("extdata", "busulfan_sim.csv",
+                               package = "irxclean"))
+}
+
+cat(sprintf(
+  "Patients: %d  |  Rows: %d  |  Observations: %d\n",
+  length(unique(dat$ID)), nrow(dat), sum(dat$EVID == 0)
+))
+```
+
+---
+
+## 2. Iterative observation flagging (NONMEM required)
+
+`remove_erroneous_obs()` fits NONMEM iteratively, removing the observation
+with the largest |CWRES| at each step.  Three input modes are supported — see
+`?remove_erroneous_obs` for details.  Here we demonstrate **Mode 3**: pass
+the dataset as an in-memory R data frame (no separate file copy needed) and
+point `mod` at the bundled model file path.
+
+Results are cached to `busulfan_results.RDS` in the working directory so
+subsequent renders skip the NONMEM run.  If neither a cache file nor a
+PsN/NONMEM installation is present, the 5-iteration pre-computed result
+bundled with the package is used as a fallback.
+
+```{r remove-obs}
+cache_file <- "busulfan_results.RDS"
+
+if (file.exists(cache_file)) {
+  results <- readRDS(cache_file)
+  message("Loaded cached results from ", cache_file)
+} else if (nzchar(Sys.which("execute"))) {
+  # Mode 3: pass data frame directly; model given as a file path
+  results <- remove_erroneous_obs(
+    dat    = dat,   # Phase 1 cleaned data frame
+    mod    = system.file("extdata", "pk_busulfan_ucsf_2025.mod",
+                         package = "irxclean"),
+    run_id = "busulfan_removal",
+    n      = 20
+  )
+  saveRDS(results, cache_file)
+  message("Results saved to ", cache_file)
+} else {
+  message("NONMEM/PsN not found and no cache -- loading package testdata.")
+  results <- readRDS(system.file("testdata", "rem_test_results.RDS",
+                                 package = "irxclean"))
+}
+
+cat("Iterations completed:", nrow(results$rmse), "\n")
+cat("Flagged observations (ranked by |CWRES|):\n")
+print(results$rem[, c("ID", "TIME", "DV", "CWRES")])
+```
+
+---
+
+## 3. Removal metrics
+
+```{r metrics-pofv, fig.cap="Change in pseudo-OFV per iteration. A sharp early drop followed by a plateau suggests meaningful early removals with diminishing returns."}
+plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
+```
+
+```{r metrics-thetas, fig.cap="THETA estimates normalised to final value. Free axes per panel; phantom reference lines at 0.75 and 1.5 ensure consistent scale even when individual parameters are stable."}
+plot_removal_metrics(results, metric = "thetas", verbose = FALSE)
+```
+
+```{r metrics-rmse, fig.cap="nRMSE across iterations."}
+plot_removal_metrics(results, metric = "rmse", verbose = FALSE)
+```
+
+---
+
+## 4. Error parameter trajectories
+
+Proportional and additive residual error parameters are auto-detected from
+the `param_labels` element of the results (parsed from `$THETA` comments in
+the model file).  For this model, `THETA7` is proportional error and `THETA8`
+is additive.  The detection source is printed when `quiet = FALSE` in
+`generate_report()`.
+
+```{r error-params}
+detected <- irxclean:::.find_error_params(
+  results$param_labels, results$par, verbose = TRUE
+)
+```
+
+```{r traj-prop, fig.cap="Proportional residual error (THETA7) stability across iterations."}
+irxclean:::.plot_param_trajectory(
+  results,
+  detected$prop_col,
+  title = "Proportional residual error (THETA7) across iterations"
+)
+```
+
+```{r traj-add, fig.cap="Additive residual error (THETA8) stability across iterations."}
+irxclean:::.plot_param_trajectory(
+  results,
+  detected$add_col,
+  title = "Additive residual error (THETA8) across iterations"
+)
+```
+
+---
+
+## 5. Model stability
+
+```{r stability}
+stability <- check_model_stability(results, threshold_pct = 20)
+print(stability)
+```
+
+```{r stability-flags}
+flag_tbl <- stability_flag_table(stability)
+if (nrow(flag_tbl) > 0) knitr::kable(flag_tbl, digits = 2) else
+  cat("All parameters stable.\n")
+```
+
+---
+
+## 6. Demographic comparison
+
+```{r demographics, fig.width=10, fig.height=7, fig.cap="Demographic comparison: subjects with removed observations vs. the rest of the cohort."}
+plot_demographic_comparison(
+  data             = dat,
+  results          = results,
+  continuous_cols  = c("AGE", "WT", "HT"),
+  categorical_cols = "SEX"
+)
+```
+
+---
+
+## 7. Apply final exclusions
+
+After reviewing the ranked flagged observations, apply user-approved exclusions:
+
+```{r remove-from-data, eval=FALSE}
+cleaned <- remove_observations_from_data(
+  data    = dat,
+  results = results,
+  n       = 10  # remove top 10ranked observations
+)
+
+write.csv(cleaned, "busulfan_cleaned.csv", row.names = FALSE)
+cat("Cleaned dataset:", nrow(cleaned), "rows\n")
+```
+
+---
+
+## 8. Generate HTML report
+
+`generate_report()` compiles all findings into a structured, self-contained
+HTML report.  Proportional and additive error parameters are auto-detected
+from `results$param_labels`; override explicitly if needed using either the
+column name (`"THETA7"`) or NONMEM index notation (`"THETA(7)"`).
+
+```{r report, eval=FALSE}
+generate_report(
+  results              = results,
+  data                 = dat,
+  # Auto-detected; shown here for illustration -- override if needed:
+  prop_error_param     = "THETA(7)",
+  add_error_param      = "THETA(8)",
+  continuous_cov_cols  = c("AGE", "WT", "HT"),
+  categorical_cov_cols = "SEX",
+  title                = "Busulfan PK -- Model-Informed Cleaning Report",
+  output_file          = "busulfan_irxclean_report.html",
+  quiet                = FALSE   # prints auto-detection summary
+)
+```
+
+---
+
+## Session information
+
+```{r session-info}
+sessionInfo()
+```

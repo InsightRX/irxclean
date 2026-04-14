@@ -1,0 +1,31 @@
+# R project files
+irxclean.Rproj
+.Rproj.user/
+
+# R build artifacts
+*.tar.gz
+*.Rcheck/
+*.Rhistory
+.RData
+.Ruserdata
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+/doc/
+/Meta/
+
+# pkgdown output
+docs/
+
+# Build artifacts
+package/
+*.Rout
+
+# Vignette output artifacts
+vignettes/*.csv
+vignettes/*.html
+vignettes/*.RDS
+vignettes/*.rds

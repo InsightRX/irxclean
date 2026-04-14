@@ -1,0 +1,11 @@
+^irxclean\.Rcheck$
+^.*\.tar\.gz$
+^package$
+^LICENSE\.md$
+^irxclean\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^doc$
+^Meta$
+^\.lintr$
+^vignettes/busulfan_simulation\.Rmd$

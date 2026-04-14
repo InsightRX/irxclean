@@ -1,0 +1,387 @@
+---
+title: "`r getOption('irxclean.report_env')$report_title`"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: flatly
+    highlight: tango
+    self_contained: true
+---
+
+<style>
+/* InsightRX brand styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  color: #111111;
+}
+h1, h2, h3, h4 {
+  color: #003B4F;
+}
+a {
+  color: #00769E;
+}
+a:hover {
+  color: #20794D;
+}
+/* TOC */
+.tocify .tocify-item a, .tocify .tocify-subheader .tocify-item a {
+  color: #003B4F;
+}
+.tocify-subheader .tocify-item a {
+  color: #5E5E5E;
+}
+/* Table */
+table th {
+  background-color: #003B4F;
+  color: white;
+}
+table tr:nth-child(even) {
+  background-color: #F0F0F0;
+}
+/* Section dividers */
+hr {
+  border-color: #003B4F;
+  opacity: 0.2;
+}
+/* Title banner */
+.fluid-row:first-of-type {
+  background-color: #003B4F;
+  color: white;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+/* Collapsible details block */
+details {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5em 1em;
+  margin-bottom: 1.5em;
+}
+details summary {
+  font-weight: bold;
+  color: #003B4F;
+  cursor: pointer;
+  padding: 0.3em 0;
+}
+details summary:hover {
+  color: #00769E;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width  = 9,
+  fig.height = 5
+)
+
+# Retrieve data objects from the options environment
+.env <- getOption("irxclean.report_env")
+results                 <- .env$results
+data                    <- .env$data
+prop_error_param        <- .env$prop_error_param
+add_error_param         <- .env$add_error_param
+continuous_cov_cols     <- .env$continuous_cov_cols
+categorical_cov_cols    <- .env$categorical_cov_cols
+id_col                  <- .env$id_col
+time_col                <- .env$time_col
+evid_col                <- .env$evid_col
+tad_col                 <- .env$tad_col
+tad_bin_width           <- .env$tad_bin_width
+stability_threshold_pct <- .env$stability_threshold_pct
+
+library(irxclean)
+```
+
+---
+
+# Overview
+
+```{r overview}
+n_iter    <- max(results$phi$ITERATION)
+n_removed <- nrow(results$rem)
+rem_ids   <- unique(results$rem[[id_col]])
+```
+
+This report summarises the iterative detection analysis performed with
+**irxclean**, identifying potentially erroneous observations for user
+investigation and review.  Final exclusion decisions rest with the analyst.
+
+| | |
+|---|---|
+| Iterations completed | `r n_iter` |
+| Observations removed | `r n_removed` |
+| Subjects affected | `r length(rem_ids)` |
+
+---
+
+# Key Results
+
+## Observations Removed
+
+```{r removed-table}
+knitr::kable(
+  results$rem[, intersect(
+    c(id_col, "TIME", "DV", "CWRES", "ITERATION"), names(results$rem)
+  )],
+  digits  = 3,
+  caption = "Observations removed in order of removal iteration"
+)
+```
+
+## pOFV Change
+
+```{r pofv-plot, fig.cap="Change in pseudo-OFV (pOFV) at each iteration, restricted to subjects with no observations removed. Each point is the pOFV improvement attributable to removing that iteration's observation. Three log-linear fits (y ~ log(x), 95% CI) are overlaid: using 100%, first 50%, and first 25% of removals."}
+plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
+```
+
+```{r prop-error-section, results='asis', echo=FALSE}
+if (!is.null(prop_error_param) && prop_error_param %in% names(results$par)) {
+  cat("## Proportional Error Stability\n\n")
+}
+```
+
+```{r prop-error-plot, eval=!is.null(prop_error_param) && !is.null(results$par) && prop_error_param %in% names(results$par), fig.cap="Proportional residual error parameter stability across removal iterations."}
+irxclean:::.plot_param_trajectory(
+  results,
+  prop_error_param,
+  title = "Proportional residual error across iterations"
+)
+```
+
+```{r add-error-section, results='asis', echo=FALSE}
+if (!is.null(add_error_param) && add_error_param %in% names(results$par)) {
+  cat("## Additive Error Stability\n\n")
+}
+```
+
+```{r add-error-plot, eval=!is.null(add_error_param) && !is.null(results$par) && add_error_param %in% names(results$par), fig.cap="Additive residual error parameter stability across removal iterations."}
+irxclean:::.plot_param_trajectory(
+  results,
+  add_error_param,
+  title = "Additive residual error across iterations"
+)
+```
+
+## nRMSE Trend
+
+```{r rmse-plot, fig.cap="Normalised RMSE (nRMSE = RMSE / mean(DV)) across iterations. A decreasing trend indicates progressive improvement in predictive accuracy."}
+plot_removal_metrics(results, metric = "rmse", verbose = FALSE)
+```
+
+---
+
+```{r open-details, results='asis', echo=FALSE}
+cat('\n<details>\n<summary><strong>Detailed Results</strong> (click to expand)</summary>\n')
+```
+
+### THETA Stability {.unlisted .unnumbered}
+
+```{r theta-plot, fig.cap="THETA parameter estimates normalised to final iteration value. Fixed parameters excluded."}
+plot_removal_metrics(results, metric = "thetas", verbose = FALSE)
+```
+
+### OMEGA Stability {.unlisted .unnumbered}
+
+```{r omega-plot, fig.cap="OMEGA diagonal variance estimates normalised to final iteration value. Fixed parameters and BLOCK SAME entries excluded."}
+plot_removal_metrics(results, metric = "omegas", verbose = FALSE)
+```
+
+```{r sigma-section, results='asis', echo=FALSE}
+# Show SIGMA section only when at least one SIGMA is non-fixed
+has_free_sigma <- {
+  sigma_cols <- grep("^SIGMA", names(results$par), value = TRUE)
+  if (length(sigma_cols) > 0) {
+    any(vapply(results$par[, sigma_cols, drop = FALSE], function(x) {
+      v <- x[!is.na(x)]
+      length(v) > 0L && !all(v == v[1L])
+    }, logical(1L)))
+  } else {
+    FALSE
+  }
+}
+if (has_free_sigma) cat("### SIGMA Stability {.unlisted .unnumbered}\n\n")
+```
+
+```{r sigma-plot, eval=has_free_sigma, fig.cap="SIGMA diagonal variance estimates normalised to final iteration value. Fixed parameters excluded."}
+plot_removal_metrics(results, metric = "sigmas", verbose = FALSE)
+```
+
+### Model Stability Assessment {.unlisted .unnumbered}
+
+```{r stability}
+stability <- check_model_stability(
+  results,
+  threshold_pct = stability_threshold_pct,
+  verbose       = FALSE
+)
+```
+
+**Threshold:** `r stability_threshold_pct`%
+**RMSE trend:** `r stability$rmse_trend`
+**Unstable parameters:** `r stability$n_flagged_params`
+
+Each free parameter is classified using three metrics computed across all
+removal iterations:
+
+| Metric | Definition |
+|---|---|
+| RSE (%) | SD / \|mean\| x 100 -- overall variability |
+| Reversals | Sign changes in consecutive differences -- measures trend bouncing |
+| CV late (%) | CV of the final third of iterations -- measures whether the parameter has settled |
+
+| Status | Criteria |
+|---|---|
+| **unstable** | RSE > 50% AND reversals >= 3, OR CV late > 10% |
+| **drifted** | Drift (first to last) > threshold / 2, but settled monotonically |
+| **stable** | Neither of the above |
+
+A *drifted* parameter is expected behaviour when a genuine outlier is removed;
+an *unstable* parameter bounces or has not settled by the final iteration and
+warrants investigation.
+
+```{r stability-flags}
+flag_tbl <- stability_flag_table(stability)
+if (nrow(flag_tbl) > 0) {
+  knitr::kable(flag_tbl, digits = 2,
+               caption = "Parameters that did not reach a stable estimate")
+} else {
+  cat("All parameters reached a stable estimate across iterations.\n")
+}
+```
+
+```{r stability-plots}
+pl <- plot(stability)
+```
+
+```{r stability-trajectory, eval=stability$n_flagged_params > 0, fig.cap="Parameter trajectories (% change from baseline) coloured by stability status. Unstable = bouncing/unsettled; drifted = shifted monotonically to a new value; stable = low variability."}
+if (!is.null(pl$parameter_drift)) print(pl$parameter_drift)
+```
+
+```{r stability-rse, fig.cap="RSE (SD / |mean| x 100%) per parameter across iterations. Red dashed line = stability threshold."}
+if (!is.null(pl$param_rse)) print(pl$param_rse)
+```
+
+```{r close-details, results='asis', echo=FALSE}
+cat('\n</details>\n')
+```
+
+---
+
+```{r demo-header, results='asis', echo=FALSE}
+has_demo <- !is.null(data) &&
+  (!is.null(continuous_cov_cols) || !is.null(categorical_cov_cols))
+if (has_demo) {
+  cat("# Demographic Comparison\n\n")
+  cat("Subjects with removed observations are compared to the full dataset ")
+  cat("to screen for demographic bias in the removal algorithm. ")
+  cat("Significant covariates are highlighted with **red bold** titles.\n\n")
+}
+```
+
+```{r demographic-data, eval=has_demo, include=FALSE}
+demo <- plot_demographic_comparison(
+  data             = data,
+  results          = results,
+  continuous_cols  = continuous_cov_cols,
+  categorical_cols = categorical_cov_cols,
+  id_col           = id_col,
+  time_col         = time_col,
+  evid_col         = evid_col,
+  tad_col          = tad_col,
+  tad_bin_width    = tad_bin_width
+)
+
+# Pre-render panel chunks for tabbed output when >1 panel
+demo_panel_chunks <- if (length(demo$panels) > 1) {
+  lapply(seq_along(demo$panels), function(i) {
+    knitr::knit_child(
+      text = c(
+        sprintf("### Panel %d", i),
+        "",
+        sprintf(
+          "```{r demo-cov-panel-%d, echo=FALSE, fig.width=12, fig.height=9}",
+          i
+        ),
+        sprintf("demo$panels[[%d]]", i),
+        "```",
+        ""
+      ),
+      envir = environment(),
+      quiet = TRUE
+    )
+  })
+} else {
+  NULL
+}
+```
+
+```{r demo-stats, eval=has_demo, results='asis', echo=FALSE}
+cat("## Statistical Tests\n\n")
+cat(
+  knitr::knit_child(
+    text  = c("```{r, echo=FALSE}", "knitr::kable(demo$stats, digits=3)", "```"),
+    envir = environment(),
+    quiet = TRUE
+  ),
+  sep = "\n"
+)
+```
+
+```{r demo-covariates, eval=has_demo, results='asis', echo=FALSE}
+if (length(demo$panels) > 1) {
+  cat("## Covariate Distributions {.tabset}\n\n")
+  cat(unlist(demo_panel_chunks), sep = "\n")
+} else if (length(demo$panels) == 1) {
+  cat("## Covariate Distributions\n\n")
+  cat(
+    knitr::knit_child(
+      text = c(
+        "```{r demo-cov-single, echo=FALSE, fig.width=12, fig.height=9}",
+        "demo$panels[[1]]",
+        "```"
+      ),
+      envir = environment(),
+      quiet = TRUE
+    ),
+    sep = "\n"
+  )
+}
+```
+
+```{r demo-tad, eval=has_demo && !is.null(demo$tad_plot), results='asis',
+    echo=FALSE}
+cat("## Removal Position on PK Curve\n\n")
+cat("*Proportion of observations removed per time-after-dose bin.
+Red bars are significantly elevated relative to the overall removal rate
+(one-sided binomial test, Bonferroni-corrected across bins).*\n\n")
+cat(
+  knitr::knit_child(
+    text  = c(
+      "```{r demo-tad-plot, echo=FALSE, fig.width=10, fig.height=4}",
+      "demo$tad_plot",
+      "```"
+    ),
+    envir = environment(),
+    quiet = TRUE
+  ),
+  sep = "\n"
+)
+```
+
+---
+
+# Session Information
+
+```{r session-info}
+si <- utils::sessionInfo()
+cat(sprintf("irxclean version: %s\n", utils::packageVersion("irxclean")))
+cat(sprintf("R version: %s\n", R.version$version.string))
+cat(sprintf("Date: %s\n", Sys.time()))
+```

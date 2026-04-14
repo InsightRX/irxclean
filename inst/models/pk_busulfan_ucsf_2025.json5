@@ -1,0 +1,103 @@
+{
+  "id": "pk_busulfan_ucsf_2025",
+  "description": "PK model for busulfan in children and adults",
+  "drug": "busulfan",
+  "ode_code": "\
+    FTIME = (1 + DROP * exp(-SHAPE * t)) ;\
+    CL_avg = CL * FMAT * FSIZE * FTIME ;\
+    CLi = CL_avg * exp(kappa_CL) \
+    Vi = V_avg * exp(kappa_V) \
+    dAdt[0] = - (CLi/Vi) * A[0] - (Qi/Vi) * A[0] + (Qi/V2i) * A[1] ;\
+    dAdt[1] =                    + (Qi/Vi) * A[0] - (Qi/V2i) * A[1] ;\
+    dAdt[2] = (A[0]/(Vi / 1000.0)) ;",
+  "pk_code": "\
+    BMI = WT/((HT*HT)/1e4); \
+    if(SEX == 0) {\
+      FFM = (1.11 + ((1-1.11)/(1+pow((AGE/7.1),-1.1)))) * ((9270 * WT)/(8780 + (244 * BMI))); \
+    } \
+    if(SEX != 0) {\
+      FFM = (0.88 + ((1-0.88)/(1+pow((AGE/13.4),-12.7)))) * ((9270 * WT)/(6680 + (216 * BMI))); \
+    }\
+    FMAT = (MAT_MAG + (1-MAT_MAG)*(1-exp(-AGE*K_MAT)));\
+    FSIZE = pow(FFM/70, 0.726) ;\
+    if(SEX == 0) {\
+      FSEX = 1.114 ;\
+    }\
+    if(SEX != 0) {\
+      FSEX = 1 ;\
+    }\
+    V_avg = V * (FFM/70) * FSEX \
+    Qi = Q * FSIZE \
+    V2i = V2 * (FFM/70) * FSEX \
+  ",
+  "n_comp": 3,
+  "obs": { "cmt": 1, "scale": "Vi / 1000.0" },
+  "dose": { "cmt": 1, "bioav": [1] },
+  "parameters": {
+    "CL": 11.56,
+    "V": 50.11,
+    "V2": 4.760,
+    "Q": 3.787,
+    "MAT_MAG": 0.4462,
+    "K_MAT": 1.120,
+    "DROP": 0.1014,
+    "SHAPE": 0.0415
+  },
+  "units": {
+    "CL": "L/hr",
+    "CLi": "L/hr",
+    "CL_avg": "L/hr",
+    "V": "L",
+    "Vi": "L",
+    "V_avg": "L",
+    "V2": "L",
+    "V2i": "L",
+    "Q": "L/hr",
+    "Qi": "L/hr",
+    "K_MAT": "/year",
+    "DROP": "",
+    "SHAPE": ""
+  },
+  "iiv": {
+    "CL": 0.2356,
+    "V": 0.2045,
+    "V2": 0.4578
+  },
+  "omega_matrix": [
+    0.0555,
+    0.0402, 0.0418,
+    0, 0, 0.2096
+  ],
+  "iov": {
+    "cv": {
+      "CL": 0.116,
+      "V": 0.112
+    },
+    "n_bins": 5,
+    "bins": [0, 24, 48, 72, 96, 9999]
+  },
+  "fixed": ["Q", "MAT_MAG", "K_MAT", "DROP", "SHAPE"],
+  "ruv": {
+    "prop": [0.069],
+    "add": [28.6]
+  },
+  "covariates": ["AGE", "WT", "HT", "SEX"],
+  "variables": ["CLi", "Vi", "Qi", "V2i", "BMI", "FFM", "FMAT", "FSIZE", "FTIME", "FSEX", "CL_avg", "V_avg"],
+  "misc": {
+    "model_type": "2cmt_iv",
+    "linearity": "linear",
+    "timevarying_parameter": true,
+    "init_parameter": false
+  },
+  "comments": [
+    "Two-compartment IV busulfan population PK model with allometric FFM scaling, sex effect on volume, maturation function on CL, and time-varying clearance. Developed from 1062 patients across 11 transplant centers (age 0.08-74.1 yr, weight 3.2-200.6 kg)."
+  ],
+  "references": [
+    {
+      "ref": "publication in progress",
+      "url": "tbd"
+    }
+  ],
+  "build": true,
+  "version": "0.1.3"
+}
