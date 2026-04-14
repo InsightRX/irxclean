@@ -1,4 +1,7 @@
 ^irxclean\.Rcheck$
+^_pkgdown\.yml$
+^docs$
+^\.github$
 ^.*\.tar\.gz$
 ^package$
 ^LICENSE\.md$
