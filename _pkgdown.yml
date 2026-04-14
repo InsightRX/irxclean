@@ -19,6 +19,5 @@ articles:
   - title: Example
     navbar: Example
     contents:
-      - busulfan_simulation
       - busulfan_pt1_gc_exclusion
       - busulfan_pt2_modelbased_cleaning
