@@ -97,7 +97,7 @@ if (file.exists(cache_file)) {
   message("Results saved to ", cache_file)
 } else {
   message("NONMEM/PsN not found and no cache -- loading package testdata.")
-  results <- readRDS(system.file("testdata", "rem_test_results.RDS",
+  results <- readRDS(system.file("extdata", "busulfan_results.RDS",
                                  package = "irxclean"))
 }
 #> NONMEM/PsN not found and no cache -- loading package testdata.

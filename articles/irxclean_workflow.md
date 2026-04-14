@@ -414,7 +414,7 @@ The package ships with a pre-computed results file from a busulfan PK
 dataset so you can explore the API without needing NONMEM:
 
 ``` r
-rds <- system.file("testdata", "rem_test_results.RDS", package = "irxclean")
+rds <- system.file("extdata", "busulfan_results.RDS", package = "irxclean")
 results <- readRDS(rds)
 
 # pOFV plot
