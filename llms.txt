@@ -1,0 +1,131 @@
+# irxclean
+
+Model-informed detection and iterative removal of potentially erroneous
+pharmacokinetic observations in clinical data.
+
+## Description
+
+`irxclean` provides tools for flagging potentially erroneous
+pharmacokinetic (PK) observations for user investigation and review. The
+package supports two complementary approaches:
+
+- **Gross data quality assessment**: model-independent checks for
+  covariate distribution outliers and concentration anomalies
+  (e.g. negative values, implausible timing, magnitude outliers).
+- **Model-based iterative flagging**: iterative CWRES-based
+  identification of potentially erroneous observations using
+  Perl-speaks-NONMEM (PsN) and NONMEM. Includes model stability
+  monitoring across iterations and demographic comparison of subjects
+  with flagged observations versus the full dataset.
+
+An automated HTML report summarising all findings can be generated with
+[`generate_report()`](https://insightrx.github.io/irxclean/reference/generate_report.md).
+Final exclusion decisions remain with the user after reviewing flagged
+observations.
+
+## Installation
+
+``` r
+devtools::install_github("InsightRX/irxclean")
+```
+
+## Requirements
+
+The model-based iterative flagging functionality
+([`remove_erroneous_obs()`](https://insightrx.github.io/irxclean/reference/remove_erroneous_obs.md))
+requires working installations of
+[NONMEM](https://www.iconplc.com/solutions/technologies/nonmem/) and
+[PsN](https://uupharmacometrics.github.io/PsN/).
+
+## Contributing
+
+We welcome input from the community:
+
+- If you think you have encountered a bug, please [submit an
+  issue](https://github.com/InsightRX/irxclean/issues) on the GitHub
+  page. Please include a reproducible example of the unexpected
+  behavior.
+
+- Please [open a pull
+  request](https://github.com/InsightRX/irxclean/pulls) if you have a
+  fix or updates that would improve the package. If you’re not sure if
+  your proposed changes are useful or within scope of the package, feel
+  free to contact one of the authors of this package.
+
+## Disclaimer
+
+The functionality in this R package is provided “as is”. While its
+authors adhere to software development best practices, the software may
+still contain unintended errors.
+
+InsightRX Inc. and the authors of this package can not be held liable
+for any damages resulting from any use of this software. By the use of
+this software package, the user waives all warranties, expressed or
+implied, including any warranties to the accuracy, quality or
+suitability of InsightRX for any particular purpose, either medical or
+non-medical.
+
+© ![InsightRX logo](reference/figures/insightrx_logo_color.png)
+
+# Package index
+
+## All functions
+
+- [`apply_exclusion_criteria()`](https://insightrx.github.io/irxclean/reference/apply_exclusion_criteria.md)
+  : Apply structured exclusion criteria to a NONMEM-format dataset
+- [`assess_data_quality()`](https://insightrx.github.io/irxclean/reference/assess_data_quality.md)
+  : Assess data quality before model-dependent cleaning
+- [`calculate_pofv_change()`](https://insightrx.github.io/irxclean/reference/calculate_pofv_change.md)
+  : Calculate the pseudo-objective function value (pOFV) change across
+  iterations
+- [`check_model_stability()`](https://insightrx.github.io/irxclean/reference/check_model_stability.md)
+  : Check model stability across removal iterations
+- [`generate_report()`](https://insightrx.github.io/irxclean/reference/generate_report.md)
+  : Generate an automated HTML cleaning report
+- [`load_removal_results()`](https://insightrx.github.io/irxclean/reference/load_removal_results.md)
+  : Load results from a previous \`remove_erroneous_obs()\` run
+- [`plot(`*`<irxclean_quality>`*`)`](https://insightrx.github.io/irxclean/reference/plot.irxclean_quality.md)
+  : Plot method for irxclean_quality objects
+- [`plot(`*`<irxclean_stability>`*`)`](https://insightrx.github.io/irxclean/reference/plot.irxclean_stability.md)
+  : Plot method for irxclean_stability objects
+- [`plot_demographic_comparison()`](https://insightrx.github.io/irxclean/reference/plot_demographic_comparison.md)
+  : Compare demographics of subjects with removed observations vs. whole
+  dataset
+- [`plot_influential_dofv()`](https://insightrx.github.io/irxclean/reference/plot_influential_dofv.md)
+  : Plot dOFV trajectory from iterative influential individual removal
+- [`plot_removal_metrics()`](https://insightrx.github.io/irxclean/reference/plot_removal_metrics.md)
+  : Plot metrics from the observation removal process
+- [`print(`*`<irxclean_demographics>`*`)`](https://insightrx.github.io/irxclean/reference/print.irxclean_demographics.md)
+  : Print method for irxclean_demographics objects
+- [`print(`*`<irxclean_exclusions>`*`)`](https://insightrx.github.io/irxclean/reference/print.irxclean_exclusions.md)
+  : Print method for irxclean_exclusions objects
+- [`print(`*`<irxclean_quality>`*`)`](https://insightrx.github.io/irxclean/reference/print.irxclean_quality.md)
+  : Print method for irxclean_quality objects
+- [`print(`*`<irxclean_stability>`*`)`](https://insightrx.github.io/irxclean/reference/print.irxclean_stability.md)
+  : Print method for irxclean_stability objects
+- [`remove_erroneous_obs()`](https://insightrx.github.io/irxclean/reference/remove_erroneous_obs.md)
+  : Iteratively detect potentially erroneous pharmacokinetic
+  observations
+- [`remove_influential_individuals()`](https://insightrx.github.io/irxclean/reference/remove_influential_individuals.md)
+  : Iteratively detect and remove influential individuals
+- [`remove_observations_from_data()`](https://insightrx.github.io/irxclean/reference/remove_observations_from_data.md)
+  : Apply user-reviewed observation exclusions to produce a cleaned
+  dataset
+- [`stability_flag_table()`](https://insightrx.github.io/irxclean/reference/stability_flag_table.md)
+  : Summarise unstable parameters in a tidy table
+
+# Articles
+
+### Workflow
+
+- [irxclean Workflow: From Raw Data to Cleaned
+  Dataset](https://insightrx.github.io/irxclean/articles/irxclean_workflow.md):
+
+### Example
+
+- [Simulated Busulfan Dataset: End-to-End irxclean
+  Workflow](https://insightrx.github.io/irxclean/articles/busulfan_simulation.md):
+- [Simulated Busulfan PK: Part 1 — Gross QC and Exclusion
+  Criteria](https://insightrx.github.io/irxclean/articles/busulfan_pt1_gc_exclusion.md):
+- [Simulated Busulfan PK: Part 2 — Model-Informed Iterative
+  Cleaning](https://insightrx.github.io/irxclean/articles/busulfan_pt2_modelbased_cleaning.md):

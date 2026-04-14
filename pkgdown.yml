@@ -1,0 +1,12 @@
+pandoc: 3.1.11
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  busulfan_pt1_gc_exclusion: busulfan_pt1_gc_exclusion.html
+  busulfan_pt2_modelbased_cleaning: busulfan_pt2_modelbased_cleaning.html
+  busulfan_simulation: busulfan_simulation.html
+  irxclean_workflow: irxclean_workflow.html
+last_built: 2026-04-14T11:20Z
+urls:
+  reference: https://insightrx.github.io/irxclean/reference
+  article: https://insightrx.github.io/irxclean/articles
