@@ -419,10 +419,6 @@ results <- readRDS(rds)
 
 # pOFV plot
 plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
-#> `geom_line()`: Each group consists of only one observation.
-#> ℹ Do you need to adjust the group aesthetic?
-#> `geom_line()`: Each group consists of only one observation.
-#> ℹ Do you need to adjust the group aesthetic?
 ```
 
 ![](irxclean_workflow_files/figure-html/example-results-1.png)
@@ -431,29 +427,29 @@ plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
 stability <- check_model_stability(results, threshold_pct = 20, verbose = FALSE)
 print(stability)
 #> irxclean model stability (threshold: 20%)
-#>   stable     : 10 parameter(s)
-#>   drifted    : 6 parameter(s)
-#>   unstable   : 1 parameter(s)
+#>   stable     : 4 parameter(s)
+#>   drifted    : 3 parameter(s)
+#>   unstable   : 10 parameter(s)
 #> 
 #> Parameter summary:
 #>        PARAMETER RSE_PCT N_REVERSALS CV_LATE_PCT DRIFT_PCT   STATUS
-#>            TH_CL   3.161           2    2.17e-01     7.004   stable
-#>             TH_V   0.989           3    1.97e-01     0.899   stable
-#>          MAT-MAG  14.145           1    1.76e+00    23.199  drifted
-#>            K_MAT   5.688           2    4.51e-01    14.244  drifted
-#>       PROP error   7.143           0    2.90e+00    16.976  drifted
-#>        ADD error 175.361           3    3.46e+03   268.871 unstable
-#>             DROP   7.458           2    3.22e+00    22.378  drifted
-#>            SHAPE  18.645           2    6.66e+00    36.079  drifted
-#>     allo ffm exp   1.742           1    1.02e+00     2.136   stable
-#>  Sex effect on V   0.559           0    2.37e-02     1.191   stable
-#>                Q   4.525           3    1.97e+00     7.710   stable
-#>               V2   2.101           3    4.00e-01     0.623   stable
-#>           IIV CL   0.432           2    1.31e-01     0.137   stable
-#>           IIV V1   2.419           1    1.69e+00     5.788   stable
-#>           IOV CL   0.636           3    5.51e-01     0.121   stable
-#>           IOV V1   3.202           3    2.83e+00     0.937   stable
-#>           IIV V2  16.136           2    8.12e+00    19.579  drifted
+#>            TH_CL   37.32          12       8.065  5.08e+01  drifted
+#>             TH_V   34.43          10       0.326  1.92e+01  drifted
+#>          MAT-MAG 7870.87           9      16.079  1.36e+01 unstable
+#>            K_MAT   37.68           7       3.686  5.21e+00   stable
+#>       PROP error    6.10           4       0.797  1.97e+01  drifted
+#>        ADD error   78.03          11       0.270  4.77e-01 unstable
+#>             DROP   88.68          12      13.318  5.86e+02 unstable
+#>            SHAPE  443.64          10      15.904  1.07e+04 unstable
+#>     allo ffm exp    4.61           8       0.984  6.59e+00   stable
+#>  Sex effect on V    1.27          11       0.149  2.02e+00   stable
+#>                Q  119.05           8       4.428  7.14e+01 unstable
+#>               V2   98.14          10       2.221  5.37e+01 unstable
+#>           IIV CL    9.84           9       0.268  1.96e+00   stable
+#>           IIV V1  137.25          10       0.721  2.30e+01 unstable
+#>           IOV CL  135.55           9       0.000  9.78e+01 unstable
+#>           IOV V1  370.66           3       0.000  0.00e+00 unstable
+#>           IIV V2   28.55           9      10.694  3.16e+01 unstable
 #> 
 #> nRMSE trend: decreasing
 ```

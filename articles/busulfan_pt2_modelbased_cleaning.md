@@ -103,16 +103,31 @@ if (file.exists(cache_file)) {
 #> NONMEM/PsN not found and no cache -- loading package testdata.
 
 cat("Iterations completed:", nrow(results$rmse), "\n")
-#> Iterations completed: 5
+#> Iterations completed: 20
 cat("Flagged observations (ranked by |CWRES|):\n")
 #> Flagged observations (ranked by |CWRES|):
 print(results$rem[, c("ID", "TIME", "DV", "CWRES")])
-#>     ID    TIME   DV   CWRES
-#> 1 1051 28.2170 1444 -7.9412
-#> 2  279  3.0000  988  5.4563
-#> 3 1548 30.8330  637 -4.6804
-#> 4  527 29.8330 1432 -4.5255
-#> 5   33  3.2166 2090 -4.4970
+#>    ID  TIME      DV   CWRES
+#> 1  12  5.18  534.31 -8.1999
+#> 2  39 51.45 4853.00  7.4235
+#> 3  39  6.30 3925.00  6.3175
+#> 4  13 28.35 1532.10 -5.0007
+#> 5  18 10.40  104.09 -4.3844
+#> 6  39 52.67 2968.50  4.0617
+#> 7  73 29.73 2311.90  4.0013
+#> 8  54 27.31 7712.70  3.9900
+#> 9  90 60.65  700.97  3.3856
+#> 10 79 54.71 1790.30  3.4172
+#> 11 39  4.55 4493.50  3.1948
+#> 12 73 56.59 1257.80  3.1732
+#> 13 81  3.17 5075.90  3.3176
+#> 14  3  7.01 1641.80  3.1707
+#> 15 52  7.37 1222.60  3.1883
+#> 16 28 52.58 2957.40  2.9034
+#> 17 63 51.66 3498.40  2.9089
+#> 18 72 51.67 3474.70  2.7608
+#> 19 16 56.82 1220.30  2.7564
+#> 20  8 59.63  644.55  2.7565
 ```
 
 ------------------------------------------------------------------------
@@ -121,10 +136,6 @@ print(results$rem[, c("ID", "TIME", "DV", "CWRES")])
 
 ``` r
 plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
-#> `geom_line()`: Each group consists of only one observation.
-#> ℹ Do you need to adjust the group aesthetic?
-#> `geom_line()`: Each group consists of only one observation.
-#> ℹ Do you need to adjust the group aesthetic?
 ```
 
 ![Change in pseudo-OFV per iteration. A sharp early drop followed by a
@@ -213,36 +224,36 @@ stability <- check_model_stability(results, threshold_pct = 20)
 #> irxclean :: Model stability check (threshold: 20%)
 #> --------------------------------------------------
 #>   Parameters assessed : 17  (fixed excluded)
-#>     stable     : 10
-#>     drifted    : 6
-#>     unstable   : 1
-#>   Unstable: ADD error
+#>     stable     : 4
+#>     drifted    : 3
+#>     unstable   : 10
+#>   Unstable: MAT-MAG, ADD error, DROP, SHAPE, Q, V2, IIV V1, IOV CL, IOV V1, IIV V2
 #>   nRMSE trend: decreasing
 print(stability)
 #> irxclean model stability (threshold: 20%)
-#>   stable     : 10 parameter(s)
-#>   drifted    : 6 parameter(s)
-#>   unstable   : 1 parameter(s)
+#>   stable     : 4 parameter(s)
+#>   drifted    : 3 parameter(s)
+#>   unstable   : 10 parameter(s)
 #> 
 #> Parameter summary:
 #>        PARAMETER RSE_PCT N_REVERSALS CV_LATE_PCT DRIFT_PCT   STATUS
-#>            TH_CL   3.161           2    2.17e-01     7.004   stable
-#>             TH_V   0.989           3    1.97e-01     0.899   stable
-#>          MAT-MAG  14.145           1    1.76e+00    23.199  drifted
-#>            K_MAT   5.688           2    4.51e-01    14.244  drifted
-#>       PROP error   7.143           0    2.90e+00    16.976  drifted
-#>        ADD error 175.361           3    3.46e+03   268.871 unstable
-#>             DROP   7.458           2    3.22e+00    22.378  drifted
-#>            SHAPE  18.645           2    6.66e+00    36.079  drifted
-#>     allo ffm exp   1.742           1    1.02e+00     2.136   stable
-#>  Sex effect on V   0.559           0    2.37e-02     1.191   stable
-#>                Q   4.525           3    1.97e+00     7.710   stable
-#>               V2   2.101           3    4.00e-01     0.623   stable
-#>           IIV CL   0.432           2    1.31e-01     0.137   stable
-#>           IIV V1   2.419           1    1.69e+00     5.788   stable
-#>           IOV CL   0.636           3    5.51e-01     0.121   stable
-#>           IOV V1   3.202           3    2.83e+00     0.937   stable
-#>           IIV V2  16.136           2    8.12e+00    19.579  drifted
+#>            TH_CL   37.32          12       8.065  5.08e+01  drifted
+#>             TH_V   34.43          10       0.326  1.92e+01  drifted
+#>          MAT-MAG 7870.87           9      16.079  1.36e+01 unstable
+#>            K_MAT   37.68           7       3.686  5.21e+00   stable
+#>       PROP error    6.10           4       0.797  1.97e+01  drifted
+#>        ADD error   78.03          11       0.270  4.77e-01 unstable
+#>             DROP   88.68          12      13.318  5.86e+02 unstable
+#>            SHAPE  443.64          10      15.904  1.07e+04 unstable
+#>     allo ffm exp    4.61           8       0.984  6.59e+00   stable
+#>  Sex effect on V    1.27          11       0.149  2.02e+00   stable
+#>                Q  119.05           8       4.428  7.14e+01 unstable
+#>               V2   98.14          10       2.221  5.37e+01 unstable
+#>           IIV CL    9.84           9       0.268  1.96e+00   stable
+#>           IIV V1  137.25          10       0.721  2.30e+01 unstable
+#>           IOV CL  135.55           9       0.000  9.78e+01 unstable
+#>           IOV V1  370.66           3       0.000  0.00e+00 unstable
+#>           IIV V2   28.55           9      10.694  3.16e+01 unstable
 #> 
 #> nRMSE trend: decreasing
 ```
@@ -253,9 +264,18 @@ if (nrow(flag_tbl) > 0) knitr::kable(flag_tbl, digits = 2) else
   cat("All parameters stable.\n")
 ```
 
-|     | PARAMETER | MEAN | FIRST |   LAST | RSE_PCT | N_REVERSALS | CV_LATE_PCT | DRIFT_PCT | STATUS   |
-|:----|:----------|-----:|------:|-------:|--------:|------------:|------------:|----------:|:---------|
-| 6   | ADD error | 5.83 |   7.2 | -12.15 |  175.36 |           3 |     3464.64 |    268.87 | unstable |
+|     | PARAMETER |  MEAN | FIRST |  LAST | RSE_PCT | N_REVERSALS | CV_LATE_PCT | DRIFT_PCT | STATUS   |
+|:----|:----------|------:|------:|------:|--------:|------------:|------------:|----------:|:---------|
+| 3   | MAT-MAG   |  0.01 |  0.10 |  0.12 | 7870.87 |           9 |       16.08 |     13.62 | unstable |
+| 6   | ADD error | 26.36 | 32.77 | 32.62 |   78.03 |          11 |        0.27 |      0.48 | unstable |
+| 7   | DROP      |  0.85 |  0.23 |  1.57 |   88.68 |          12 |       13.32 |    586.12 | unstable |
+| 8   | SHAPE     | -0.01 |  0.00 |  0.00 |  443.64 |          10 |       15.90 |  10737.04 | unstable |
+| 11  | Q         |  6.42 | 10.92 |  3.13 |  119.05 |           8 |        4.43 |     71.35 | unstable |
+| 12  | V2        |  7.01 |  9.07 |  4.20 |   98.14 |          10 |        2.22 |     53.65 | unstable |
+| 14  | IIV V1    |  0.10 |  0.07 |  0.05 |  137.25 |          10 |        0.72 |     22.99 | unstable |
+| 15  | IOV CL    |  0.00 |  0.00 |  0.00 |  135.55 |           9 |        0.00 |     97.81 | unstable |
+| 16  | IOV V1    |  0.03 |  0.00 |  0.00 |  370.66 |           3 |        0.00 |      0.00 | unstable |
+| 17  | IIV V2    |  0.06 |  0.11 |  0.07 |   28.55 |           9 |       10.69 |     31.63 | unstable |
 
 ------------------------------------------------------------------------
 
@@ -268,17 +288,15 @@ plot_demographic_comparison(
   continuous_cols  = c("AGE", "WT", "HT"),
   categorical_cols = "SEX"
 )
-#> Warning in stats::chisq.test(contingency, correct = FALSE): Chi-squared
-#> approximation may be incorrect
 #> TAD column not found - computed from dose records (EVID == 1 / AMT > 0).
-#> irxclean demographic comparison (5 subjects with removed obs)
+#> irxclean demographic comparison (16 subjects with removed obs)
 #> 
 #> Statistical tests:
 #>  covariate              test   p_value significant
-#>        AGE Wilcoxon rank-sum 0.6154182       FALSE
-#>         WT Wilcoxon rank-sum 0.6524481       FALSE
-#>         HT Wilcoxon rank-sum 0.7030824       FALSE
-#>        SEX       Chi-squared 0.3342398       FALSE
+#>        AGE Wilcoxon rank-sum 0.4351332       FALSE
+#>         WT Wilcoxon rank-sum 0.2774897       FALSE
+#>         HT Wilcoxon rank-sum 0.2691470       FALSE
+#>        SEX       Chi-squared 0.4710967       FALSE
 ```
 
 ------------------------------------------------------------------------

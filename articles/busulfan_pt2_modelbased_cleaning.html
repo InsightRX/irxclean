@@ -195,27 +195,38 @@ pre-computed result bundled with the package is used as a fallback.</p>
 <span><span class="co">#&gt; NONMEM/PsN not found and no cache -- loading package testdata.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Iterations completed:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">rmse</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Iterations completed: 5</span></span>
+<span><span class="co">#&gt; Iterations completed: 20</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Flagged observations (ranked by |CWRES|):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Flagged observations (ranked by |CWRES|):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">rem</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"TIME"</span>, <span class="st">"DV"</span>, <span class="st">"CWRES"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     ID    TIME   DV   CWRES</span></span>
-<span><span class="co">#&gt; 1 1051 28.2170 1444 -7.9412</span></span>
-<span><span class="co">#&gt; 2  279  3.0000  988  5.4563</span></span>
-<span><span class="co">#&gt; 3 1548 30.8330  637 -4.6804</span></span>
-<span><span class="co">#&gt; 4  527 29.8330 1432 -4.5255</span></span>
-<span><span class="co">#&gt; 5   33  3.2166 2090 -4.4970</span></span></code></pre></div>
+<span><span class="co">#&gt;    ID  TIME      DV   CWRES</span></span>
+<span><span class="co">#&gt; 1  12  5.18  534.31 -8.1999</span></span>
+<span><span class="co">#&gt; 2  39 51.45 4853.00  7.4235</span></span>
+<span><span class="co">#&gt; 3  39  6.30 3925.00  6.3175</span></span>
+<span><span class="co">#&gt; 4  13 28.35 1532.10 -5.0007</span></span>
+<span><span class="co">#&gt; 5  18 10.40  104.09 -4.3844</span></span>
+<span><span class="co">#&gt; 6  39 52.67 2968.50  4.0617</span></span>
+<span><span class="co">#&gt; 7  73 29.73 2311.90  4.0013</span></span>
+<span><span class="co">#&gt; 8  54 27.31 7712.70  3.9900</span></span>
+<span><span class="co">#&gt; 9  90 60.65  700.97  3.3856</span></span>
+<span><span class="co">#&gt; 10 79 54.71 1790.30  3.4172</span></span>
+<span><span class="co">#&gt; 11 39  4.55 4493.50  3.1948</span></span>
+<span><span class="co">#&gt; 12 73 56.59 1257.80  3.1732</span></span>
+<span><span class="co">#&gt; 13 81  3.17 5075.90  3.3176</span></span>
+<span><span class="co">#&gt; 14  3  7.01 1641.80  3.1707</span></span>
+<span><span class="co">#&gt; 15 52  7.37 1222.60  3.1883</span></span>
+<span><span class="co">#&gt; 16 28 52.58 2957.40  2.9034</span></span>
+<span><span class="co">#&gt; 17 63 51.66 3498.40  2.9089</span></span>
+<span><span class="co">#&gt; 18 72 51.67 3474.70  2.7608</span></span>
+<span><span class="co">#&gt; 19 16 56.82 1220.30  2.7564</span></span>
+<span><span class="co">#&gt; 20  8 59.63  644.55  2.7565</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="removal-metrics">3. Removal metrics<a class="anchor" aria-label="anchor" href="#removal-metrics"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"pOFV"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; `geom_line()`: Each group consists of only one observation.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Do you need to adjust the <span style="color: #00BB00;">group</span> aesthetic?</span></span>
-<span><span class="co">#&gt; `geom_line()`: Each group consists of only one observation.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Do you need to adjust the <span style="color: #00BB00;">group</span> aesthetic?</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"pOFV"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
 <img src="busulfan_pt2_modelbased_cleaning_files/figure-html/metrics-pofv-1.png" class="r-plt" alt="Change in pseudo-OFV per iteration. A sharp early drop followed by a plateau suggests meaningful early removals with diminishing returns." width="768"><p class="caption">
 Change in pseudo-OFV per iteration. A sharp early drop followed by a
@@ -290,36 +301,36 @@ Additive residual error (THETA8) stability across iterations.
 <span><span class="co">#&gt; irxclean :: Model stability check (threshold: 20%)</span></span>
 <span><span class="co">#&gt; --------------------------------------------------</span></span>
 <span><span class="co">#&gt;   Parameters assessed : 17  (fixed excluded)</span></span>
-<span><span class="co">#&gt;     stable     : 10</span></span>
-<span><span class="co">#&gt;     drifted    : 6</span></span>
-<span><span class="co">#&gt;     unstable   : 1</span></span>
-<span><span class="co">#&gt;   Unstable: ADD error</span></span>
+<span><span class="co">#&gt;     stable     : 4</span></span>
+<span><span class="co">#&gt;     drifted    : 3</span></span>
+<span><span class="co">#&gt;     unstable   : 10</span></span>
+<span><span class="co">#&gt;   Unstable: MAT-MAG, ADD error, DROP, SHAPE, Q, V2, IIV V1, IOV CL, IOV V1, IIV V2</span></span>
 <span><span class="co">#&gt;   nRMSE trend: decreasing</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">stability</span><span class="op">)</span></span>
 <span><span class="co">#&gt; irxclean model stability (threshold: 20%)</span></span>
-<span><span class="co">#&gt;   stable     : 10 parameter(s)</span></span>
-<span><span class="co">#&gt;   drifted    : 6 parameter(s)</span></span>
-<span><span class="co">#&gt;   unstable   : 1 parameter(s)</span></span>
+<span><span class="co">#&gt;   stable     : 4 parameter(s)</span></span>
+<span><span class="co">#&gt;   drifted    : 3 parameter(s)</span></span>
+<span><span class="co">#&gt;   unstable   : 10 parameter(s)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Parameter summary:</span></span>
 <span><span class="co">#&gt;        PARAMETER RSE_PCT N_REVERSALS CV_LATE_PCT DRIFT_PCT   STATUS</span></span>
-<span><span class="co">#&gt;            TH_CL   3.161           2    2.17e-01     7.004   stable</span></span>
-<span><span class="co">#&gt;             TH_V   0.989           3    1.97e-01     0.899   stable</span></span>
-<span><span class="co">#&gt;          MAT-MAG  14.145           1    1.76e+00    23.199  drifted</span></span>
-<span><span class="co">#&gt;            K_MAT   5.688           2    4.51e-01    14.244  drifted</span></span>
-<span><span class="co">#&gt;       PROP error   7.143           0    2.90e+00    16.976  drifted</span></span>
-<span><span class="co">#&gt;        ADD error 175.361           3    3.46e+03   268.871 unstable</span></span>
-<span><span class="co">#&gt;             DROP   7.458           2    3.22e+00    22.378  drifted</span></span>
-<span><span class="co">#&gt;            SHAPE  18.645           2    6.66e+00    36.079  drifted</span></span>
-<span><span class="co">#&gt;     allo ffm exp   1.742           1    1.02e+00     2.136   stable</span></span>
-<span><span class="co">#&gt;  Sex effect on V   0.559           0    2.37e-02     1.191   stable</span></span>
-<span><span class="co">#&gt;                Q   4.525           3    1.97e+00     7.710   stable</span></span>
-<span><span class="co">#&gt;               V2   2.101           3    4.00e-01     0.623   stable</span></span>
-<span><span class="co">#&gt;           IIV CL   0.432           2    1.31e-01     0.137   stable</span></span>
-<span><span class="co">#&gt;           IIV V1   2.419           1    1.69e+00     5.788   stable</span></span>
-<span><span class="co">#&gt;           IOV CL   0.636           3    5.51e-01     0.121   stable</span></span>
-<span><span class="co">#&gt;           IOV V1   3.202           3    2.83e+00     0.937   stable</span></span>
-<span><span class="co">#&gt;           IIV V2  16.136           2    8.12e+00    19.579  drifted</span></span>
+<span><span class="co">#&gt;            TH_CL   37.32          12       8.065  5.08e+01  drifted</span></span>
+<span><span class="co">#&gt;             TH_V   34.43          10       0.326  1.92e+01  drifted</span></span>
+<span><span class="co">#&gt;          MAT-MAG 7870.87           9      16.079  1.36e+01 unstable</span></span>
+<span><span class="co">#&gt;            K_MAT   37.68           7       3.686  5.21e+00   stable</span></span>
+<span><span class="co">#&gt;       PROP error    6.10           4       0.797  1.97e+01  drifted</span></span>
+<span><span class="co">#&gt;        ADD error   78.03          11       0.270  4.77e-01 unstable</span></span>
+<span><span class="co">#&gt;             DROP   88.68          12      13.318  5.86e+02 unstable</span></span>
+<span><span class="co">#&gt;            SHAPE  443.64          10      15.904  1.07e+04 unstable</span></span>
+<span><span class="co">#&gt;     allo ffm exp    4.61           8       0.984  6.59e+00   stable</span></span>
+<span><span class="co">#&gt;  Sex effect on V    1.27          11       0.149  2.02e+00   stable</span></span>
+<span><span class="co">#&gt;                Q  119.05           8       4.428  7.14e+01 unstable</span></span>
+<span><span class="co">#&gt;               V2   98.14          10       2.221  5.37e+01 unstable</span></span>
+<span><span class="co">#&gt;           IIV CL    9.84           9       0.268  1.96e+00   stable</span></span>
+<span><span class="co">#&gt;           IIV V1  137.25          10       0.721  2.30e+01 unstable</span></span>
+<span><span class="co">#&gt;           IOV CL  135.55           9       0.000  9.78e+01 unstable</span></span>
+<span><span class="co">#&gt;           IOV V1  370.66           3       0.000  0.00e+00 unstable</span></span>
+<span><span class="co">#&gt;           IIV V2   28.55           9      10.694  3.16e+01 unstable</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; nRMSE trend: decreasing</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -330,9 +341,9 @@ Additive residual error (THETA8) stability across iterations.
 <colgroup>
 <col width="3%">
 <col width="12%">
-<col width="6%">
 <col width="7%">
-<col width="8%">
+<col width="7%">
+<col width="7%">
 <col width="9%">
 <col width="14%">
 <col width="14%">
@@ -351,18 +362,128 @@ Additive residual error (THETA8) stability across iterations.
 <th align="right">DRIFT_PCT</th>
 <th align="left">STATUS</th>
 </tr></thead>
-<tbody><tr class="odd">
+<tbody>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">MAT-MAG</td>
+<td align="right">0.01</td>
+<td align="right">0.10</td>
+<td align="right">0.12</td>
+<td align="right">7870.87</td>
+<td align="right">9</td>
+<td align="right">16.08</td>
+<td align="right">13.62</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="even">
 <td align="left">6</td>
 <td align="left">ADD error</td>
-<td align="right">5.83</td>
-<td align="right">7.2</td>
-<td align="right">-12.15</td>
-<td align="right">175.36</td>
-<td align="right">3</td>
-<td align="right">3464.64</td>
-<td align="right">268.87</td>
+<td align="right">26.36</td>
+<td align="right">32.77</td>
+<td align="right">32.62</td>
+<td align="right">78.03</td>
+<td align="right">11</td>
+<td align="right">0.27</td>
+<td align="right">0.48</td>
 <td align="left">unstable</td>
-</tr></tbody>
+</tr>
+<tr class="odd">
+<td align="left">7</td>
+<td align="left">DROP</td>
+<td align="right">0.85</td>
+<td align="right">0.23</td>
+<td align="right">1.57</td>
+<td align="right">88.68</td>
+<td align="right">12</td>
+<td align="right">13.32</td>
+<td align="right">586.12</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="even">
+<td align="left">8</td>
+<td align="left">SHAPE</td>
+<td align="right">-0.01</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">443.64</td>
+<td align="right">10</td>
+<td align="right">15.90</td>
+<td align="right">10737.04</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="odd">
+<td align="left">11</td>
+<td align="left">Q</td>
+<td align="right">6.42</td>
+<td align="right">10.92</td>
+<td align="right">3.13</td>
+<td align="right">119.05</td>
+<td align="right">8</td>
+<td align="right">4.43</td>
+<td align="right">71.35</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="even">
+<td align="left">12</td>
+<td align="left">V2</td>
+<td align="right">7.01</td>
+<td align="right">9.07</td>
+<td align="right">4.20</td>
+<td align="right">98.14</td>
+<td align="right">10</td>
+<td align="right">2.22</td>
+<td align="right">53.65</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="odd">
+<td align="left">14</td>
+<td align="left">IIV V1</td>
+<td align="right">0.10</td>
+<td align="right">0.07</td>
+<td align="right">0.05</td>
+<td align="right">137.25</td>
+<td align="right">10</td>
+<td align="right">0.72</td>
+<td align="right">22.99</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="even">
+<td align="left">15</td>
+<td align="left">IOV CL</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">135.55</td>
+<td align="right">9</td>
+<td align="right">0.00</td>
+<td align="right">97.81</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="odd">
+<td align="left">16</td>
+<td align="left">IOV V1</td>
+<td align="right">0.03</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">370.66</td>
+<td align="right">3</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="left">unstable</td>
+</tr>
+<tr class="even">
+<td align="left">17</td>
+<td align="left">IIV V2</td>
+<td align="right">0.06</td>
+<td align="right">0.11</td>
+<td align="right">0.07</td>
+<td align="right">28.55</td>
+<td align="right">9</td>
+<td align="right">10.69</td>
+<td align="right">31.63</td>
+<td align="left">unstable</td>
+</tr>
+</tbody>
 </table>
 <hr>
 </div>
@@ -376,17 +497,15 @@ Additive residual error (THETA8) stability across iterations.
 <span>  continuous_cols  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span><span class="op">)</span>,</span>
 <span>  categorical_cols <span class="op">=</span> <span class="st">"SEX"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in stats::chisq.test(contingency, correct = FALSE): Chi-squared</span></span>
-<span><span class="co">#&gt; approximation may be incorrect</span></span>
 <span><span class="co">#&gt; TAD column not found - computed from dose records (EVID == 1 / AMT &gt; 0).</span></span>
-<span><span class="co">#&gt; irxclean demographic comparison (5 subjects with removed obs)</span></span>
+<span><span class="co">#&gt; irxclean demographic comparison (16 subjects with removed obs)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistical tests:</span></span>
 <span><span class="co">#&gt;  covariate              test   p_value significant</span></span>
-<span><span class="co">#&gt;        AGE Wilcoxon rank-sum 0.6154182       FALSE</span></span>
-<span><span class="co">#&gt;         WT Wilcoxon rank-sum 0.6524481       FALSE</span></span>
-<span><span class="co">#&gt;         HT Wilcoxon rank-sum 0.7030824       FALSE</span></span>
-<span><span class="co">#&gt;        SEX       Chi-squared 0.3342398       FALSE</span></span></code></pre></div>
+<span><span class="co">#&gt;        AGE Wilcoxon rank-sum 0.4351332       FALSE</span></span>
+<span><span class="co">#&gt;         WT Wilcoxon rank-sum 0.2774897       FALSE</span></span>
+<span><span class="co">#&gt;         HT Wilcoxon rank-sum 0.2691470       FALSE</span></span>
+<span><span class="co">#&gt;        SEX       Chi-squared 0.4710967       FALSE</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
