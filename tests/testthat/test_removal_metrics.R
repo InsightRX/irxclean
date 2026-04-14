@@ -44,7 +44,7 @@ test_that(".calculate_nrmse is correct", {
 })
 
 test_that("load_removal_results works with RDS fixture", {
-  rds_path <- system.file("testdata", "rem_test_results.RDS", package = "irxclean")
+  rds_path <- system.file("extdata", "busulfan_results.RDS", package = "irxclean")
   skip_if(!file.exists(rds_path), "Test fixture not available")
   res <- readRDS(rds_path)
   expect_true(all(c("par", "rem", "phi", "rmse") %in% names(res)))

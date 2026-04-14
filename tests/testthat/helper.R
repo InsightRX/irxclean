@@ -4,18 +4,18 @@
 
 #' Load the bundled example results (from inst/testdata)
 example_results <- function() {
-  rds <- system.file("testdata", "rem_test_results.RDS", package = "irxclean")
+  rds <- system.file("extdata", "busulfan_results.RDS", package = "irxclean")
   if (!nzchar(rds)) {
     rds <- file.path(
-      system.file(package = "irxclean"), "..", "..", "inst", "testdata",
-      "rem_test_results.RDS"
+      system.file(package = "irxclean"), "..", "..", "inst", "extdata",
+      "busulfan_results.RDS"
     )
   }
   # Fall back: read directly from source during development
   if (!file.exists(rds)) {
     rds <- file.path(
-      rprojroot::find_package_root_file(), "inst", "testdata",
-      "rem_test_results.RDS"
+      rprojroot::find_package_root_file(), "inst", "extdata",
+      "busulfan_results.RDS"
     )
   }
   readRDS(rds)
