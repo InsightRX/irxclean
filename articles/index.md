@@ -7,8 +7,6 @@
 
 ### Example
 
-- [Simulated Busulfan Dataset: End-to-End irxclean
-  Workflow](https://insightrx.github.io/irxclean/articles/busulfan_simulation.md):
 - [Simulated Busulfan PK: Part 1 — Gross QC and Exclusion
   Criteria](https://insightrx.github.io/irxclean/articles/busulfan_pt1_gc_exclusion.md):
 - [Simulated Busulfan PK: Part 2 — Model-Informed Iterative
