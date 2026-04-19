@@ -465,6 +465,91 @@ remove_influential_individuals <- function(
 }
 
 
+#' Apply user-reviewed subject exclusions to produce a cleaned dataset
+#'
+#' After running \code{remove_influential_individuals()} and reviewing the
+#' flagged subjects, use this function to apply exclusions at the
+#' \emph{subject} level and produce a cleaned dataset suitable for final
+#' analysis.  All rows belonging to the top \code{n} flagged subjects
+#' (by iteration order) are removed.
+#'
+#' This is the subject-level analogue of \code{remove_observations_from_data()}.
+#'
+#' @section User review:
+#' Flagged subjects should be investigated before calling this function.
+#' A high individual OFV may reflect a genuine patient subgroup or an unusual
+#' but valid pharmacokinetic profile, not necessarily erroneous data.  Final
+#' exclusion decisions rest with the analyst.
+#'
+#' @param data A data frame containing the original NONMEM dataset.
+#' @param results A results list from \code{remove_influential_individuals()}.
+#' @param n Integer or \code{NULL}.  Number of subjects to remove (taken from
+#'   the first \code{n} entries in \code{results$rem}, ordered by
+#'   \code{ITERATION}).  Default: all removed subjects.
+#' @param id_col Character.  Name of the subject ID column.  Default
+#'   \code{"ID"}.
+#'
+#' @return The input \code{data} frame with all rows for the excluded subjects
+#'   removed.  A warning is raised if the resulting number of unique IDs does
+#'   not decrease by exactly \code{n}.
+#'
+#' @examples
+#' \dontrun{
+#' original_data <- read.csv("my_data.csv")
+#' results       <- remove_influential_individuals(
+#'   dat    = original_data,
+#'   mod    = "my_model",
+#'   run_id = "iir_run1",
+#'   n      = 10
+#' )
+#' # Remove the top 5 most influential subjects
+#' cleaned <- remove_individuals_from_data(original_data, results, n = 5)
+#' }
+#'
+#' @seealso \code{remove_influential_individuals()},
+#'   \code{remove_observations_from_data()}
+#'
+#' @export
+remove_individuals_from_data <- function(
+    data,
+    results,
+    n      = NULL,
+    id_col = "ID"
+) {
+  rem <- results$rem
+  if (is.null(rem) || nrow(rem) == 0L) {
+    warning("`results$rem` is empty — no subjects were removed.")
+    return(data)
+  }
+
+  if (!is.null(n)) {
+    n <- as.integer(n)
+    if (is.na(n) || n < 1L) stop("`n` must be a positive integer.")
+    rem <- rem[order(rem$ITERATION), , drop = FALSE]
+    rem <- utils::head(rem, n)
+  }
+
+  if (!id_col %in% names(data)) {
+    stop(sprintf("ID column '%s' not found in dataset.", id_col))
+  }
+
+  ids_to_remove <- unique(rem[[id_col]])
+  ids_before    <- length(unique(data[[id_col]]))
+  new_data      <- data[!data[[id_col]] %in% ids_to_remove, , drop = FALSE]
+  ids_after     <- length(unique(new_data[[id_col]]))
+  n_removed_ids <- ids_before - ids_after
+
+  if (n_removed_ids != length(ids_to_remove)) {
+    warning(sprintf(
+      "Expected to remove %d unique subject(s) but removed %d.  Check that the ID column name matches.",
+      length(ids_to_remove), n_removed_ids
+    ))
+  }
+
+  new_data
+}
+
+
 #' Plot dOFV trajectory from iterative influential individual removal
 #'
 #' Creates a waterfall/trajectory plot of the change in total OFV
