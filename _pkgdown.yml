@@ -1,4 +1,9 @@
 url: https://insightrx.github.io/irxclean/
+
+announcement: >
+  <b>Beta:</b> This package is under active development and not yet on CRAN.
+  Functionality and APIs may change.
+
 template:
   bootstrap: 5
 

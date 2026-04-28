@@ -1,5 +1,11 @@
 # irxclean
 
+<!-- badges: start -->
+[![Lifecycle: beta](https://img.shields.io/badge/lifecycle-beta-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+<!-- badges: end -->
+
+> **Note**: This package is currently in **beta** and under active development. Functionality and APIs may change before the first stable release.
+
 Model-informed detection and iterative removal of potentially erroneous pharmacokinetic observations in clinical data.
 
 ## Description
