@@ -478,7 +478,7 @@ cat("Saved:", nrow(excl$data_clean), "rows to busulfan_pt1_ready.csv\n")
 
 ``` r
 sessionInfo()
-#> R version 4.5.3 (2026-03-11)
+#> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -502,17 +502,17 @@ sessionInfo()
 #> [1] irxclean_0.1.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1        compiler_4.5.3    
+#>  [1] gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1        compiler_4.6.0    
 #>  [5] tidyselect_1.2.1   stringr_1.6.0      tidyr_1.3.2        jquerylib_0.1.4   
 #>  [9] systemfonts_1.3.2  scales_1.4.0       textshaping_1.0.5  yaml_2.3.12       
-#> [13] fastmap_1.2.0      ggplot2_4.0.2      R6_2.6.1           labeling_0.4.3    
+#> [13] fastmap_1.2.0      ggplot2_4.0.3      R6_2.6.1           labeling_0.4.3    
 #> [17] vpc_1.2.4          generics_0.1.4     patchwork_1.3.2    knitr_1.51        
 #> [21] tibble_3.3.1       desc_1.4.3         bslib_0.10.0       pillar_1.11.1     
 #> [25] RColorBrewer_1.1-3 rlang_1.2.0        stringi_1.8.7      cachem_1.1.0      
-#> [29] xfun_0.57          fs_2.1.0           sass_0.4.10        S7_0.2.1-1        
+#> [29] xfun_0.57          fs_2.1.0           sass_0.4.10        S7_0.2.2          
 #> [33] cli_3.6.6          withr_3.0.2        pkgdown_2.2.0      magrittr_2.0.5    
-#> [37] digest_0.6.39      grid_4.5.3         lifecycle_1.0.5    vctrs_0.7.3       
+#> [37] digest_0.6.39      grid_4.6.0         lifecycle_1.0.5    vctrs_0.7.3       
 #> [41] evaluate_1.0.5     glue_1.8.1         farver_2.1.2       ragg_1.5.2        
-#> [45] purrr_1.2.2        rmarkdown_2.31     tools_4.5.3        pkgconfig_2.0.3   
+#> [45] purrr_1.2.2        rmarkdown_2.31     tools_4.6.0        pkgconfig_2.0.3   
 #> [49] htmltools_0.5.9
 ```

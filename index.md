@@ -1,5 +1,9 @@
 # irxclean
 
+> **Note**: This package is currently in **beta** and under active
+> development. Functionality and APIs may change before the first stable
+> release.
+
 Model-informed detection and iterative removal of potentially erroneous
 pharmacokinetic observations in clinical data.
 
