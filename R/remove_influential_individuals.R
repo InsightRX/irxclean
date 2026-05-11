@@ -518,7 +518,7 @@ remove_individuals_from_data <- function(
 ) {
   rem <- results$rem
   if (is.null(rem) || nrow(rem) == 0L) {
-    warning("`results$rem` is empty — no subjects were removed.")
+    warning("`results$rem` is empty - no subjects were removed.")
     return(data)
   }
 

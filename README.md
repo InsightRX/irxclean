@@ -2,6 +2,8 @@
 
 <!-- badges: start -->
 [![Lifecycle: beta](https://img.shields.io/badge/lifecycle-beta-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+[![R-CMD-check](https://github.com/InsightRX/irxclean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/InsightRX/irxclean/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/InsightRX/irxclean/branch/main/graph/badge.svg)](https://app.codecov.io/gh/InsightRX/irxclean?branch=main)
 <!-- badges: end -->
 
 > **Note**: This package is currently in **beta** and under active development. Functionality and APIs may change before the first stable release.

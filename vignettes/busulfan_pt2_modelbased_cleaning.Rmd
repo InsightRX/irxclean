@@ -67,8 +67,7 @@ if (file.exists(pt1_file)) {
     "busulfan_pt1_ready.csv not found -- falling back to raw dataset.\n",
     "Run busulfan_pt1_gc_exclusion first to generate the cleaned input."
   )
-  dat <- read.csv(system.file("extdata", "busulfan_sim.csv",
-                               package = "irxclean"))
+  dat <- busulfan_sim
 }
 
 cat(sprintf(

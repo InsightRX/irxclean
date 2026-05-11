@@ -56,7 +56,7 @@ The following intentional errors were introduced:
 ## 1. Load the dataset
 
 ```{r load-data}
-dat <- read.csv(system.file("extdata", "busulfan_sim.csv", package = "irxclean"))
+dat <- busulfan_sim
 
 cat(sprintf(
   "Patients: %d  |  Rows: %d  |  Observations: %d\n",
