@@ -17,10 +17,6 @@ navbar:
       aria-label: Home
 
 articles:
-  - title: Workflow
-    navbar: ~
-    contents:
-      - irxclean
   - title: Example
     navbar: Example
     contents:
