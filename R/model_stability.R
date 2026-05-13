@@ -25,6 +25,9 @@
 #'   is considered to have high variability.  Also used (as
 #'   \code{threshold_pct / 4}) to assess late-iteration stability.
 #'   Default 20 (i.e. 20\%).
+#' @param late_window_fraction Numeric. Fraction of iterations (from the end)
+#'   used to assess late-stage CV stability.  Default \code{1/3} (final
+#'   third, minimum 2 iterations).
 #' @param verbose Logical. Print a stability summary to the console?
 #'   Default TRUE.
 #'
@@ -64,8 +67,9 @@
 #' @export
 check_model_stability <- function(
   results,
-  threshold_pct = 20,
-  verbose       = TRUE
+  threshold_pct        = 20,
+  late_window_fraction = 1/3,
+  verbose              = TRUE
 ) {
   .validate_results(results)
 
@@ -102,8 +106,8 @@ check_model_stability <- function(
   }
   param_cols <- c(theta_cols, diag_omega, sigma_cols)
 
-  # Window for late-stage stability (final third of iterations, min 2)
-  n_late <- max(2L, floor(n_iter / 3L))
+  # Window for late-stage stability (final fraction of iterations, min 2)
+  n_late <- max(2L, floor(n_iter * late_window_fraction))
 
   # -- Per-parameter summary ---------------------------------------------------
   summary_rows <- lapply(param_cols, function(param) {

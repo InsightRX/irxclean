@@ -252,7 +252,9 @@ remove_influential_individuals <- function(
   )
 
   new_mod_file <- paste0(run_id, ".mod")
-  nm_write_model(nm_model, new_mod_file, overwrite = TRUE)
+  mod_tmp_file <- paste0(new_mod_file, ".tmp")
+  nm_write_model(nm_model, mod_tmp_file, overwrite = TRUE)
+  file.rename(mod_tmp_file, new_mod_file)
   if (verbose) message("Writing modified model file for iterative runs.")
 
   # -- Iterative removal loop ----------------------------------------------------
@@ -272,11 +274,13 @@ remove_influential_individuals <- function(
   repeat {
     iter <- iter + 1L
 
-    # Write current dataset to CSV with IGNORE@ header
-    csv_path <- paste0(run_id, ".csv")
-    writeLines(paste0("@", paste(names(data), collapse = ",")), csv_path)
-    utils::write.table(data, csv_path, append = TRUE, sep = ",",
+    # Write current dataset to CSV with IGNORE@ header (atomic: tmp then rename)
+    csv_path     <- paste0(run_id, ".csv")
+    csv_tmp_path <- paste0(csv_path, ".tmp")
+    writeLines(paste0("@", paste(names(data), collapse = ",")), csv_tmp_path)
+    utils::write.table(data, csv_tmp_path, append = TRUE, sep = ",",
                        col.names = FALSE, row.names = FALSE, quote = FALSE)
+    file.rename(csv_tmp_path, csv_path)
 
     n_subj_cur <- length(unique(data[[id_col]]))
     if (verbose) {
@@ -293,19 +297,29 @@ remove_influential_individuals <- function(
       }
     }
 
-    fit_dir <- sprintf("iteration_%s_%d", run_id, iter - 1L)
-    system(
+    fit_dir      <- sprintf("iteration_%s_%d", run_id, iter - 1L)
+    exit_execute <- system(
       command       = paste0("execute ", new_mod_file, " --dir=", fit_dir),
-      intern        = TRUE,
       ignore.stdout = !verbose,
       ignore.stderr = !verbose
     )
-    system(
+    if (exit_execute != 0L) {
+      stop(sprintf(
+        "PsN `execute` failed (exit code %d) at iteration %d. Check output in %s.",
+        exit_execute, iter, fit_dir
+      ))
+    }
+    exit_sumo <- system(
       command       = paste0("sumo ", run_id, ".lst"),
-      intern        = TRUE,
       ignore.stdout = !verbose,
       ignore.stderr = !verbose
     )
+    if (exit_sumo != 0L) {
+      warning(sprintf(
+        "PsN `sumo` returned non-zero exit code %d at iteration %d.",
+        exit_sumo, iter
+      ))
+    }
 
     # Read individual OBJ values from phi file
     phifile <- paste0(run_id, ".phi")
