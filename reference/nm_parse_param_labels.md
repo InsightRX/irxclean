@@ -32,6 +32,7 @@ the `$THETA` and `$OMEGA` blocks of your NONMEM control stream.
 
 **Format:**
 
+
       ; <index>. <Label>          -- single parameter
       ; <start>-<end>. <Label>    -- range (e.g. IOV block)
 
@@ -42,12 +43,14 @@ surrounding spaces are flexible – the parser accepts `; 1. CL`,
 
 **THETA example:**
 
+
     $THETA
       (0, 11.5555) ; 1. CL
       (0,  9.2)    ; 2. V1
       (0,  3.1)    ; 3. KA
 
 **OMEGA example (IIV + IOV):**
+
 
     $OMEGA
       0.09         ; 1. IIV CL

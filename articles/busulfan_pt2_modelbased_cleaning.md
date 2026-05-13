@@ -21,11 +21,11 @@ comparison, and HTML report generation.
 After Part 1 removes the subject with a weight decimal error (ID 18),
 the following errors remain in the dataset for the model to detect:
 
-| FLAG bit | Error type                                                 | Count           |
-|----------|------------------------------------------------------------|-----------------|
-| 2        | Concentration IQR outlier (\>3\*IQR above Q3 per TAD bin)  | 2 observations  |
-| 4        | Timing error (+/- 5, 10, 30, or 60 minutes from true time) | 10 observations |
-| 8        | Concentration magnitude error (multipliers 0.25–1.75x)     | 10 observations |
+| FLAG bit | Error type | Count |
+|----|----|----|
+| 2 | Concentration IQR outlier (\>3\*IQR above Q3 per TAD bin) | 2 observations |
+| 4 | Timing error (+/- 5, 10, 30, or 60 minutes from true time) | 10 observations |
+| 8 | Concentration magnitude error (multipliers 0.25–1.75x) | 10 observations |
 
 ------------------------------------------------------------------------
 
@@ -38,6 +38,7 @@ as a fallback — note that in this case one extra subject (ID 18) with a
 covariate error remains in the data.
 
 ``` r
+
 pt1_file <- "busulfan_pt1_ready.csv"
 
 if (file.exists(pt1_file)) {
@@ -48,8 +49,7 @@ if (file.exists(pt1_file)) {
     "busulfan_pt1_ready.csv not found -- falling back to raw dataset.\n",
     "Run busulfan_pt1_gc_exclusion first to generate the cleaned input."
   )
-  dat <- read.csv(system.file("extdata", "busulfan_sim.csv",
-                               package = "irxclean"))
+  dat <- busulfan_sim
 }
 #> busulfan_pt1_ready.csv not found -- falling back to raw dataset.
 #> Run busulfan_pt1_gc_exclusion first to generate the cleaned input.
@@ -79,6 +79,7 @@ PsN/NONMEM installation is present, the 5-iteration pre-computed result
 bundled with the package is used as a fallback.
 
 ``` r
+
 cache_file <- "busulfan_results.RDS"
 
 if (file.exists(cache_file)) {
@@ -135,6 +136,7 @@ print(results$rem[, c("ID", "TIME", "DV", "CWRES")])
 ## 3. Removal metrics
 
 ``` r
+
 plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
 ```
 
@@ -146,6 +148,7 @@ Change in pseudo-OFV per iteration. A sharp early drop followed by a
 plateau suggests meaningful early removals with diminishing returns.
 
 ``` r
+
 plot_removal_metrics(results, metric = "thetas", verbose = FALSE)
 ```
 
@@ -159,6 +162,7 @@ reference lines at 0.75 and 1.5 ensure consistent scale even when
 individual parameters are stable.
 
 ``` r
+
 plot_removal_metrics(results, metric = "rmse", verbose = FALSE)
 ```
 
@@ -179,6 +183,7 @@ error and `THETA8` is additive. The detection source is printed when
 [`generate_report()`](https://insightrx.github.io/irxclean/reference/generate_report.md).
 
 ``` r
+
 detected <- irxclean:::.find_error_params(
   results$param_labels, results$par, verbose = TRUE
 )
@@ -189,6 +194,7 @@ detected <- irxclean:::.find_error_params(
 ```
 
 ``` r
+
 irxclean:::.plot_param_trajectory(
   results,
   detected$prop_col,
@@ -202,6 +208,7 @@ iterations.](busulfan_pt2_modelbased_cleaning_files/figure-html/traj-prop-1.png)
 Proportional residual error (THETA7) stability across iterations.
 
 ``` r
+
 irxclean:::.plot_param_trajectory(
   results,
   detected$add_col,
@@ -219,6 +226,7 @@ Additive residual error (THETA8) stability across iterations.
 ## 5. Model stability
 
 ``` r
+
 stability <- check_model_stability(results, threshold_pct = 20)
 #> 
 #> irxclean :: Model stability check (threshold: 20%)
@@ -259,29 +267,31 @@ print(stability)
 ```
 
 ``` r
+
 flag_tbl <- stability_flag_table(stability)
 if (nrow(flag_tbl) > 0) knitr::kable(flag_tbl, digits = 2) else
   cat("All parameters stable.\n")
 ```
 
-|     | PARAMETER |  MEAN | FIRST |  LAST | RSE_PCT | N_REVERSALS | CV_LATE_PCT | DRIFT_PCT | STATUS   |
-|:----|:----------|------:|------:|------:|--------:|------------:|------------:|----------:|:---------|
-| 3   | MAT-MAG   |  0.01 |  0.10 |  0.12 | 7870.87 |           9 |       16.08 |     13.62 | unstable |
-| 6   | ADD error | 26.36 | 32.77 | 32.62 |   78.03 |          11 |        0.27 |      0.48 | unstable |
-| 7   | DROP      |  0.85 |  0.23 |  1.57 |   88.68 |          12 |       13.32 |    586.12 | unstable |
-| 8   | SHAPE     | -0.01 |  0.00 |  0.00 |  443.64 |          10 |       15.90 |  10737.04 | unstable |
-| 11  | Q         |  6.42 | 10.92 |  3.13 |  119.05 |           8 |        4.43 |     71.35 | unstable |
-| 12  | V2        |  7.01 |  9.07 |  4.20 |   98.14 |          10 |        2.22 |     53.65 | unstable |
-| 14  | IIV V1    |  0.10 |  0.07 |  0.05 |  137.25 |          10 |        0.72 |     22.99 | unstable |
-| 15  | IOV CL    |  0.00 |  0.00 |  0.00 |  135.55 |           9 |        0.00 |     97.81 | unstable |
-| 16  | IOV V1    |  0.03 |  0.00 |  0.00 |  370.66 |           3 |        0.00 |      0.00 | unstable |
-| 17  | IIV V2    |  0.06 |  0.11 |  0.07 |   28.55 |           9 |       10.69 |     31.63 | unstable |
+|  | PARAMETER | MEAN | FIRST | LAST | RSE_PCT | N_REVERSALS | CV_LATE_PCT | DRIFT_PCT | STATUS |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|:---|
+| 3 | MAT-MAG | 0.01 | 0.10 | 0.12 | 7870.87 | 9 | 16.08 | 13.62 | unstable |
+| 6 | ADD error | 26.36 | 32.77 | 32.62 | 78.03 | 11 | 0.27 | 0.48 | unstable |
+| 7 | DROP | 0.85 | 0.23 | 1.57 | 88.68 | 12 | 13.32 | 586.12 | unstable |
+| 8 | SHAPE | -0.01 | 0.00 | 0.00 | 443.64 | 10 | 15.90 | 10737.04 | unstable |
+| 11 | Q | 6.42 | 10.92 | 3.13 | 119.05 | 8 | 4.43 | 71.35 | unstable |
+| 12 | V2 | 7.01 | 9.07 | 4.20 | 98.14 | 10 | 2.22 | 53.65 | unstable |
+| 14 | IIV V1 | 0.10 | 0.07 | 0.05 | 137.25 | 10 | 0.72 | 22.99 | unstable |
+| 15 | IOV CL | 0.00 | 0.00 | 0.00 | 135.55 | 9 | 0.00 | 97.81 | unstable |
+| 16 | IOV V1 | 0.03 | 0.00 | 0.00 | 370.66 | 3 | 0.00 | 0.00 | unstable |
+| 17 | IIV V2 | 0.06 | 0.11 | 0.07 | 28.55 | 9 | 10.69 | 31.63 | unstable |
 
 ------------------------------------------------------------------------
 
 ## 6. Demographic comparison
 
 ``` r
+
 plot_demographic_comparison(
   data             = dat,
   results          = results,
@@ -307,6 +317,7 @@ After reviewing the ranked flagged observations, apply user-approved
 exclusions:
 
 ``` r
+
 cleaned <- remove_observations_from_data(
   data    = dat,
   results = results,
@@ -328,6 +339,7 @@ Proportional and additive error parameters are auto-detected from
 column name (`"THETA7"`) or NONMEM index notation (`"THETA(7)"`).
 
 ``` r
+
 generate_report(
   results              = results,
   data                 = dat,
@@ -347,6 +359,7 @@ generate_report(
 ## Session information
 
 ``` r
+
 sessionInfo()
 #> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -369,7 +382,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] irxclean_0.1.0
+#> [1] irxclean_0.1.0.9000
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1       

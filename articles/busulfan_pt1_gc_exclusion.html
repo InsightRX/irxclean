@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">irxclean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,12 +29,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/irxclean.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/irxclean_workflow.html">irxclean Workflow: From Raw Data to Cleaned Dataset</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Example</h6></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt1_gc_exclusion.html">Simulated Busulfan PK: Part 1 — Gross QC and Exclusion Criteria</a></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt2_modelbased_cleaning.html">Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning</a></li>
@@ -77,7 +77,8 @@
 <code>irxclean</code> analysis: model-independent data screening before
 a base NONMEM model is fitted. It walks through:</p>
 <ul>
-<li>Loading and visualising the simulated busulfan dataset</li>
+<li>Inspecting the simulated busulfan dataset
+(<code>busulfan_sim</code>)</li>
 <li>Gross data quality screening with
 <code><a href="../reference/assess_data_quality.html">assess_data_quality()</a></code>
 </li>
@@ -100,7 +101,7 @@ removal. Run this vignette first and save
 <div class="section level3">
 <h3 id="dataset-and-intentional-errors">Dataset and intentional errors<a class="anchor" aria-label="anchor" href="#dataset-and-intentional-errors"></a>
 </h3>
-<p>The dataset (<code>busulfan_sim.csv</code>) was generated with
+<p>The dataset (<code>busulfan_sim</code>) was generated with
 <strong>PKPDsim</strong> using a two-compartment IV busulfan population
 PK model (ADVAN3 TRANS4, allometric FFM scaling, maturation,
 time-varying CL, IIV + IOV). 100 patients (80 paediatric, 20 adult) each
@@ -146,18 +147,16 @@ kg)</td>
 </div>
 </div>
 <div class="section level2">
-<h2 id="load-the-dataset">1. Load the dataset<a class="anchor" aria-label="anchor" href="#load-the-dataset"></a>
+<h2 id="inspect-the-dataset">1. Inspect the dataset<a class="anchor" aria-label="anchor" href="#inspect-the-dataset"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"busulfan_sim.csv"</span>, package <span class="op">=</span> <span class="st">"irxclean"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Patients: %d  |  Rows: %d  |  Observations: %d\n"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">EVID</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">EVID</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Patients: 100  |  Rows: 1600  |  Observations: 1200</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">err_obs</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">FLAG</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">dat</span><span class="op">$</span><span class="va">EVID</span> <span class="op">==</span> <span class="fl">0</span>,</span>
+<code class="sourceCode R"><span><span class="va">err_obs</span> <span class="op">&lt;-</span> <span class="va">busulfan_sim</span><span class="op">[</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">FLAG</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">busulfan_sim</span><span class="op">$</span><span class="va">EVID</span> <span class="op">==</span> <span class="fl">0</span>,</span>
 <span>               <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"TIME"</span>, <span class="st">"DV"</span>, <span class="st">"FLAG"</span>, <span class="st">"FLAG_LABEL"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Flagged observations (ground truth):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Flagged observations (ground truth):</span></span>
@@ -227,7 +226,7 @@ post-infusion windows (10-45 min, 1-3 h, 3-6 h, 6-12 h after end of the
 </p>
 </div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dose_times</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">TIME</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">EVID</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">dose_times</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">TIME</span><span class="op">[</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">EVID</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">.pk_layers</span><span class="op">(</span><span class="st">"TIME"</span>, <span class="st">"Time (h)"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">24</span>, <span class="fl">48</span>, <span class="fl">63</span>, <span class="fl">72</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -261,7 +260,7 @@ concentration TAD-bin outliers, unexplained concentration elevations,
 and missing data.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess_data_quality.html">assess_data_quality</a></span><span class="op">(</span></span>
-<span>  data             <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>  data             <span class="op">=</span> <span class="va">busulfan_sim</span>,</span>
 <span>  covariate_cols   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span><span class="op">)</span>,</span>
 <span>  categorical_cols <span class="op">=</span> <span class="st">"SEX"</span>,</span>
 <span>  iqr_multiplier   <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -375,7 +374,7 @@ paediatric-skewed WT distribution is clamped to zero.</p>
 <p>Direct range inspection reveals the anomaly immediately:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Per-subject weight (one row per patient)</span></span>
-<span><span class="va">subj</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">subj</span> <span class="op">&lt;-</span> <span class="va">busulfan_sim</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"WT range across subjects:\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; WT range across subjects:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">subj</span><span class="op">$</span><span class="va">WT</span><span class="op">)</span><span class="op">)</span></span>
@@ -396,7 +395,7 @@ dose records for the subject:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"All rows for ID 18:\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; All rows for ID 18:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">ID</span> <span class="op">==</span> <span class="fl">76</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"TIME"</span>, <span class="st">"AMT"</span>, <span class="st">"EVID"</span>, <span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span>, <span class="st">"FLAG_LABEL"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">[</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">ID</span> <span class="op">==</span> <span class="fl">76</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"TIME"</span>, <span class="st">"AMT"</span>, <span class="st">"EVID"</span>, <span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span>, <span class="st">"FLAG_LABEL"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      ID  TIME AMT EVID AGE WT  HT       FLAG_LABEL</span></span>
 <span><span class="co">#&gt; 1201 76  0.00 130    1 9.4  4 122 covariate_weight</span></span>
 <span><span class="co">#&gt; 1202 76  3.20   0    0 9.4  4 122 covariate_weight</span></span>
@@ -431,13 +430,13 @@ the built-in checks.</p>
 flags all rows for ID 18:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">excl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_exclusion_criteria.html">apply_exclusion_criteria</a></span><span class="op">(</span></span>
-<span>  data             <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>  data             <span class="op">=</span> <span class="va">busulfan_sim</span>,</span>
 <span>  check_dose_outlier       <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dose_iqr_multiplier      <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  conc_increase_threshold  <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  conc_floor               <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  custom_criteria  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    wt_implausible <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">ID</span> <span class="op">==</span> <span class="fl">76</span>   <span class="co"># decimal-place weight error</span></span>
+<span>    wt_implausible <span class="op">=</span> <span class="va">busulfan_sim</span><span class="op">$</span><span class="va">ID</span> <span class="op">==</span> <span class="fl">76</span>   <span class="co"># decimal-place weight error</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -530,11 +529,11 @@ all flagged rows have been removed.</p>
 <h2 id="summary">6. Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_raw</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">n_raw</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">)</span></span>
 <span><span class="va">n_clean</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">excl</span><span class="op">$</span><span class="va">data_clean</span><span class="op">)</span></span>
 <span><span class="va">n_removed</span> <span class="op">&lt;-</span> <span class="va">n_raw</span> <span class="op">-</span> <span class="va">n_clean</span></span>
 <span></span>
-<span><span class="va">subj_raw</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">subj_raw</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">busulfan_sim</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">subj_clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">excl</span><span class="op">$</span><span class="va">data_clean</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
@@ -608,7 +607,7 @@ above.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] irxclean_0.1.0</span></span>
+<span><span class="co">#&gt; [1] irxclean_0.1.0.9000</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1        compiler_4.6.0    </span></span>

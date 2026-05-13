@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">irxclean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,12 +29,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/irxclean.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/irxclean_workflow.html">irxclean Workflow: From Raw Data to Cleaned Dataset</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Example</h6></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt1_gc_exclusion.html">Simulated Busulfan PK: Part 1 — Gross QC and Exclusion Criteria</a></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt2_modelbased_cleaning.html">Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning</a></li>
@@ -144,8 +144,7 @@ extra subject (ID 18) with a covariate error remains in the data.</p>
 <span>    <span class="st">"busulfan_pt1_ready.csv not found -- falling back to raw dataset.\n"</span>,</span>
 <span>    <span class="st">"Run busulfan_pt1_gc_exclusion first to generate the cleaned input."</span></span>
 <span>  <span class="op">)</span></span>
-<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"busulfan_sim.csv"</span>,</span>
-<span>                               package <span class="op">=</span> <span class="st">"irxclean"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">busulfan_sim</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt; busulfan_pt1_ready.csv not found -- falling back to raw dataset.</span></span>
 <span><span class="co">#&gt; Run busulfan_pt1_gc_exclusion first to generate the cleaned input.</span></span>
@@ -574,7 +573,7 @@ override explicitly if needed using either the column name
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] irxclean_0.1.0</span></span>
+<span><span class="co">#&gt; [1] irxclean_0.1.0.9000</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1       </span></span>

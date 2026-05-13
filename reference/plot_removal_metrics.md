@@ -63,6 +63,7 @@ file.
 To enable labelling, add inline comments to your `$THETA` and `$OMEGA`
 blocks following the format `; <index>. <Label>`:
 
+
     $THETA
       (0, 11.6) ; 1. CL
       (0,  9.2) ; 2. V1

@@ -1,10 +1,5 @@
 # Articles
 
-### Workflow
-
-- [irxclean Workflow: From Raw Data to Cleaned
-  Dataset](https://insightrx.github.io/irxclean/articles/irxclean_workflow.md):
-
 ### Example
 
 - [Simulated Busulfan PK: Part 1 — Gross QC and Exclusion

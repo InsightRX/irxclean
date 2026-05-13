@@ -12,13 +12,13 @@ Source:
 [`DESCRIPTION`](https://github.com/InsightRX/irxclean/blob/main/DESCRIPTION)
 
 Jordan Brooks (2026). *irxclean: Model-Informed Detection of Potentially
-Erroneous Pharmacokinetic Observations*. R package version 0.1.0,
+Erroneous Pharmacokinetic Observations*. R package version 0.1.0.9000,
 <https://github.com/InsightRX/irxclean>.
 
     @Manual{,
       title = {irxclean: Model-Informed Detection of Potentially Erroneous Pharmacokinetic Observations},
       author = {{Jordan Brooks}},
       year = {2026},
-      note = {R package version 0.1.0},
+      note = {R package version 0.1.0.9000},
       url = {https://github.com/InsightRX/irxclean},
     }

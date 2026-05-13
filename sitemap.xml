@@ -5,12 +5,13 @@
 <url><loc>https://insightrx.github.io/irxclean/articles/busulfan_pt1_gc_exclusion.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/articles/busulfan_pt2_modelbased_cleaning.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/articles/index.html</loc></url>
-<url><loc>https://insightrx.github.io/irxclean/articles/irxclean_workflow.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/articles/irxclean.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/authors.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/index.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/news/index.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/apply_exclusion_criteria.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/assess_data_quality.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/reference/busulfan_sim.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/calculate_pofv_change.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/check_model_stability.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/generate_report.html</loc></url>
@@ -31,6 +32,7 @@
 <url><loc>https://insightrx.github.io/irxclean/reference/print.irxclean_quality.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/print.irxclean_stability.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/remove_erroneous_obs.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/reference/remove_individuals_from_data.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/remove_influential_individuals.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/remove_observations_from_data.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/stability_flag_table.html</loc></url>

@@ -119,6 +119,7 @@ exist in the current working directory. This was the original interface
 and remains the simplest option when your working directory is already
 set to the folder that contains the data and model.
 
+
     results <- remove_erroneous_obs(
       dat    = "my_data",    # reads my_data.csv from getwd()
       mod    = "my_model",   # reads my_model.mod from getwd()
@@ -131,6 +132,7 @@ set to the folder that contains the data and model.
 Pass a relative or absolute path. The `.csv` / `.mod` extension is
 stripped and re-appended automatically, so you can include or omit it.
 Useful when files live in a different directory from your R session.
+
 
     results <- remove_erroneous_obs(
       dat    = "/projects/busulfan/data/bu_data.csv",
@@ -149,6 +151,7 @@ your data in R (e.g. after applying
 or when you want to modify the model programmatically before running.
 NONMEM still runs from temporary files on disk – the objects are written
 there automatically.
+
 
     pk_clean <- apply_exclusion_criteria(...)$data_clean
     nm_mod   <- nm_read_model("/projects/busulfan/models/bu_base.mod")

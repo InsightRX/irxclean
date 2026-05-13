@@ -6,7 +6,7 @@ This vignette covers **Phase 1** of an `irxclean` analysis:
 model-independent data screening before a base NONMEM model is fitted.
 It walks through:
 
-- Loading and visualising the simulated busulfan dataset
+- Inspecting the simulated busulfan dataset (`busulfan_sim`)
 - Gross data quality screening with
   [`assess_data_quality()`](https://insightrx.github.io/irxclean/reference/assess_data_quality.md)
 - Investigating covariate anomalies that IQR-based screening misses
@@ -21,7 +21,7 @@ It walks through:
 
 ### Dataset and intentional errors
 
-The dataset (`busulfan_sim.csv`) was generated with **PKPDsim** using a
+The dataset (`busulfan_sim`) was generated with **PKPDsim** using a
 two-compartment IV busulfan population PK model (ADVAN3 TRANS4,
 allometric FFM scaling, maturation, time-varying CL, IIV + IOV). 100
 patients (80 paediatric, 20 adult) each received 4 MAP-adapted doses,
@@ -29,29 +29,29 @@ with 4 TDM samples per dose (1,200 observations total).
 
 The following intentional errors were introduced:
 
-| FLAG bit | Error type                                                      | Count           |
-|----------|-----------------------------------------------------------------|-----------------|
-| 1        | Covariate weight: decimal-place shift (e.g. 22.0 kg -\> 2.2 kg) | 1 patient       |
-| 2        | Concentration IQR outlier (\>3\*IQR above Q3 per TAD bin)       | 2 observations  |
-| 4        | Timing error (+/- 5, 10, 30, or 60 minutes from true time)      | 10 observations |
-| 8        | Concentration magnitude error (multipliers 0.25–1.75x)          | 10 observations |
+| FLAG bit | Error type | Count |
+|----|----|----|
+| 1 | Covariate weight: decimal-place shift (e.g. 22.0 kg -\> 2.2 kg) | 1 patient |
+| 2 | Concentration IQR outlier (\>3\*IQR above Q3 per TAD bin) | 2 observations |
+| 4 | Timing error (+/- 5, 10, 30, or 60 minutes from true time) | 10 observations |
+| 8 | Concentration magnitude error (multipliers 0.25–1.75x) | 10 observations |
 
 ------------------------------------------------------------------------
 
-## 1. Load the dataset
+## 1. Inspect the dataset
 
 ``` r
-dat <- read.csv(system.file("extdata", "busulfan_sim.csv", package = "irxclean"))
 
 cat(sprintf(
   "Patients: %d  |  Rows: %d  |  Observations: %d\n",
-  length(unique(dat$ID)), nrow(dat), sum(dat$EVID == 0)
+  length(unique(busulfan_sim$ID)), nrow(busulfan_sim), sum(busulfan_sim$EVID == 0)
 ))
 #> Patients: 100  |  Rows: 1600  |  Observations: 1200
 ```
 
 ``` r
-err_obs <- dat[dat$FLAG > 0 & dat$EVID == 0,
+
+err_obs <- busulfan_sim[busulfan_sim$FLAG > 0 & busulfan_sim$EVID == 0,
                c("ID", "TIME", "DV", "FLAG", "FLAG_LABEL")]
 cat("Flagged observations (ground truth):\n")
 #> Flagged observations (ground truth):
@@ -108,6 +108,7 @@ absolute time lets you spot structurally implausible values before any
 model is fitted.
 
 ``` r
+
 ggplot2::ggplot() +
   .pk_layers("TAD", "Time after dose (h)", c(3, 6, 9, 12, 15)) +
   ggplot2::labs(
@@ -128,7 +129,8 @@ post-infusion windows (10-45 min, 1-3 h, 3-6 h, 6-12 h after end of the
 3-h infusion).
 
 ``` r
-dose_times <- unique(dat$TIME[dat$EVID == 1])
+
+dose_times <- unique(busulfan_sim$TIME[busulfan_sim$EVID == 1])
 
 ggplot2::ggplot() +
   .pk_layers("TIME", "Time (h)", c(0, 24, 48, 63, 72)) +
@@ -165,8 +167,9 @@ covariate outliers (IQR-based), concentration TAD-bin outliers,
 unexplained concentration elevations, and missing data.
 
 ``` r
+
 qc <- assess_data_quality(
-  data             = dat,
+  data             = busulfan_sim,
   covariate_cols   = c("AGE", "WT", "HT"),
   categorical_cols = "SEX",
   iqr_multiplier   = 3,
@@ -191,6 +194,7 @@ qc <- assess_data_quality(
 ### 3.1 Covariate outliers
 
 ``` r
+
 cat("Covariate outliers detected by IQR screen:\n")
 #> Covariate outliers detected by IQR screen:
 print(qc$covariate_outliers)
@@ -218,6 +222,7 @@ through direct inspection and physiology-guided thresholds.
 ### 3.2 Concentration TAD-bin outliers
 
 ``` r
+
 cat("Concentration TAD-bin outliers:\n")
 #> Concentration TAD-bin outliers:
 print(qc$concentration_bin_outliers)
@@ -239,6 +244,7 @@ refine this further using CWRES.
 ### 3.3 Concentration elevation flags
 
 ``` r
+
 cat("Concentration elevations without intervening dose:\n")
 #> Concentration elevations without intervening dose:
 print(qc$concentration_flags)
@@ -251,6 +257,7 @@ print(qc$concentration_flags)
 ### 3.4 Missing data summary
 
 ``` r
+
 cat("Columns with missing values:\n")
 #> Columns with missing values:
 miss <- qc$missing_summary[qc$missing_summary$n_missing > 0, ]
@@ -261,6 +268,7 @@ if (nrow(miss) == 0) cat("None.\n") else print(miss)
 ### 3.5 QC plot
 
 ``` r
+
 plot(qc)
 #> $concentration_bin_outliers
 ```
@@ -289,8 +297,9 @@ paediatric-skewed WT distribution is clamped to zero.
 Direct range inspection reveals the anomaly immediately:
 
 ``` r
+
 # Per-subject weight (one row per patient)
-subj <- dat[!duplicated(dat$ID), c("ID", "AGE", "WT", "HT")]
+subj <- busulfan_sim[!duplicated(busulfan_sim$ID), c("ID", "AGE", "WT", "HT")]
 cat("WT range across subjects:\n")
 #> WT range across subjects:
 print(range(subj$WT))
@@ -313,9 +322,10 @@ Before applying the exclusion, confirm the error by reviewing raw dose
 records for the subject:
 
 ``` r
+
 cat("All rows for ID 18:\n")
 #> All rows for ID 18:
-print(dat[dat$ID == 76, c("ID", "TIME", "AMT", "EVID", "AGE", "WT", "HT", "FLAG_LABEL")])
+print(busulfan_sim[busulfan_sim$ID == 76, c("ID", "TIME", "AMT", "EVID", "AGE", "WT", "HT", "FLAG_LABEL")])
 #>      ID  TIME AMT EVID AGE WT  HT       FLAG_LABEL
 #> 1201 76  0.00 130    1 9.4  4 122 covariate_weight
 #> 1202 76  3.20   0    0 9.4  4 122 covariate_weight
@@ -353,14 +363,15 @@ Here we add one custom criterion — `wt_implausible` — that flags all
 rows for ID 18:
 
 ``` r
+
 excl <- apply_exclusion_criteria(
-  data             = dat,
+  data             = busulfan_sim,
   check_dose_outlier       = TRUE,
   dose_iqr_multiplier      = 3,
   conc_increase_threshold  = 1.5,
   conc_floor               = 1,
   custom_criteria  = list(
-    wt_implausible = dat$ID == 76   # decimal-place weight error
+    wt_implausible = busulfan_sim$ID == 76   # decimal-place weight error
   )
 )
 #> 
@@ -380,6 +391,7 @@ excl <- apply_exclusion_criteria(
 ```
 
 ``` r
+
 print(excl)
 #> irxclean exclusion criteria summary
 #>   Criteria applied : 6
@@ -398,6 +410,7 @@ print(excl)
 ```
 
 ``` r
+
 if (nrow(excl$exclusion_summary) > 0) {
   knitr::kable(excl$exclusion_summary, digits = 2,
                caption = "Exclusion criteria summary")
@@ -413,7 +426,7 @@ if (nrow(excl$exclusion_summary) > 0) {
 | excl_dose_outlier    |         0 |          0 |        0.00 |
 | excl_wt_implausible  |        16 |          1 |        1.00 |
 
-Exclusion criteria summary
+Exclusion criteria summary {.table}
 
 The `excl$data_clean` object contains the dataset after all flagged rows
 have been removed.
@@ -423,11 +436,12 @@ have been removed.
 ## 6. Summary
 
 ``` r
-n_raw     <- nrow(dat)
+
+n_raw     <- nrow(busulfan_sim)
 n_clean   <- nrow(excl$data_clean)
 n_removed <- n_raw - n_clean
 
-subj_raw   <- length(unique(dat$ID))
+subj_raw   <- length(unique(busulfan_sim$ID))
 subj_clean <- length(unique(excl$data_clean$ID))
 
 cat(sprintf(
@@ -464,6 +478,7 @@ columns appended — useful for audit trails and downstream documentation.
 Write the cleaned dataset to disk for use in Part 2:
 
 ``` r
+
 write.csv(excl$data_clean, "busulfan_pt1_ready.csv", row.names = FALSE)
 cat("Saved:", nrow(excl$data_clean), "rows to busulfan_pt1_ready.csv\n")
 ```
@@ -477,6 +492,7 @@ cat("Saved:", nrow(excl$data_clean), "rows to busulfan_pt1_ready.csv\n")
 ## Session information
 
 ``` r
+
 sessionInfo()
 #> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -499,7 +515,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] irxclean_0.1.0
+#> [1] irxclean_0.1.0.9000
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1        compiler_4.6.0    
