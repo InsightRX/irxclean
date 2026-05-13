@@ -1,7 +1,7 @@
 Package: irxclean
 Type: Package
 Title: Model-Informed Detection of Potentially Erroneous Pharmacokinetic Observations
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: c(
     person("InsightRX", role = "cph"),
     person("Jordan Brooks", role = c("aut", "cre"),
@@ -19,7 +19,7 @@ Description: Provides tools for flagging potentially erroneous pharmacokinetic
     after reviewing flagged observations.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: false
+LazyData: true
 Depends:
     R (>= 4.1.0)
 Imports:
@@ -37,10 +37,9 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    withr,
-    scales
+    withr
 Config/testthat/edition: 3
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 URL: https://github.com/InsightRX/irxclean
 BugReports: https://github.com/InsightRX/irxclean/issues

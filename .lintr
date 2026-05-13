@@ -1,3 +1,6 @@
 linters: linters_with_defaults(
+  # Disabled because ggplot2 aes() variables (e.g. aes(x = ITERATION)) are
+  # flagged as undefined globals by the static linter. These are legitimate
+  # tidy-eval / NSE patterns; suppress inline with # nolint if re-enabling.
   object_usage_linter = NULL
 )

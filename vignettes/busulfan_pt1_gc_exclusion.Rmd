@@ -25,7 +25,7 @@ library(irxclean)
 This vignette covers **Phase 1** of an `irxclean` analysis: model-independent data
 screening before a base NONMEM model is fitted.  It walks through:
 
-- Loading and visualising the simulated busulfan dataset
+- Inspecting the simulated busulfan dataset (`busulfan_sim`)
 - Gross data quality screening with `assess_data_quality()`
 - Investigating covariate anomalies that IQR-based screening misses
 - Applying structured exclusion criteria with `apply_exclusion_criteria()`
@@ -37,7 +37,7 @@ screening before a base NONMEM model is fitted.  It walks through:
 
 ### Dataset and intentional errors
 
-The dataset (`busulfan_sim.csv`) was generated with **PKPDsim** using a two-compartment
+The dataset (`busulfan_sim`) was generated with **PKPDsim** using a two-compartment
 IV busulfan population PK model (ADVAN3 TRANS4, allometric FFM scaling, maturation,
 time-varying CL, IIV + IOV).  100 patients (80 paediatric, 20 adult) each received 4
 MAP-adapted doses, with 4 TDM samples per dose (1,200 observations total).
@@ -53,19 +53,17 @@ The following intentional errors were introduced:
 
 ---
 
-## 1. Load the dataset
+## 1. Inspect the dataset
 
-```{r load-data}
-dat <- read.csv(system.file("extdata", "busulfan_sim.csv", package = "irxclean"))
-
+```{r inspect-data}
 cat(sprintf(
   "Patients: %d  |  Rows: %d  |  Observations: %d\n",
-  length(unique(dat$ID)), nrow(dat), sum(dat$EVID == 0)
+  length(unique(busulfan_sim$ID)), nrow(busulfan_sim), sum(busulfan_sim$EVID == 0)
 ))
 ```
 
 ```{r summarise-errors}
-err_obs <- dat[dat$FLAG > 0 & dat$EVID == 0,
+err_obs <- busulfan_sim[busulfan_sim$FLAG > 0 & busulfan_sim$EVID == 0,
                c("ID", "TIME", "DV", "FLAG", "FLAG_LABEL")]
 cat("Flagged observations (ground truth):\n")
 print(err_obs[order(err_obs$FLAG, err_obs$ID), ])
@@ -84,7 +82,7 @@ Plotting DV against both time-after-dose (TAD) and absolute time lets you spot
 structurally implausible values before any model is fitted.
 
 ```{r plot-pk-setup, include=FALSE}
-obs <- dat[dat$EVID == 0, ]
+obs <- busulfan_sim[busulfan_sim$EVID == 0, ]
 obs$TAD <- obs$TIME %% 24
 
 obs$error_type <- "Clean"
@@ -154,7 +152,7 @@ ggplot2::ggplot() +
 ```
 
 ```{r plot-pk-time, fig.width=9, fig.height=5, fig.cap="DV vs. absolute time. Vertical dashed lines mark the four dose times (0, 24, 48, 72 h)."}
-dose_times <- unique(dat$TIME[dat$EVID == 1])
+dose_times <- unique(busulfan_sim$TIME[busulfan_sim$EVID == 1])
 
 ggplot2::ggplot() +
   .pk_layers("TIME", "Time (h)", c(0, 24, 48, 63, 72)) +
@@ -183,7 +181,7 @@ concentration elevations, and missing data.
 
 ```{r gross-qc}
 qc <- assess_data_quality(
-  data             = dat,
+  data             = busulfan_sim,
   covariate_cols   = c("AGE", "WT", "HT"),
   categorical_cols = "SEX",
   iqr_multiplier   = 3,
@@ -253,7 +251,7 @@ Direct range inspection reveals the anomaly immediately:
 
 ```{r wt-range}
 # Per-subject weight (one row per patient)
-subj <- dat[!duplicated(dat$ID), c("ID", "AGE", "WT", "HT")]
+subj <- busulfan_sim[!duplicated(busulfan_sim$ID), c("ID", "AGE", "WT", "HT")]
 cat("WT range across subjects:\n")
 print(range(subj$WT))
 
@@ -270,7 +268,7 @@ the subject:
 
 ```{r wt-error-subject}
 cat("All rows for ID 18:\n")
-print(dat[dat$ID == 76, c("ID", "TIME", "AMT", "EVID", "AGE", "WT", "HT", "FLAG_LABEL")])
+print(busulfan_sim[busulfan_sim$ID == 76, c("ID", "TIME", "AMT", "EVID", "AGE", "WT", "HT", "FLAG_LABEL")])
 ```
 
 The dosing was calculated using the erroneous weight, so both the covariate and the
@@ -289,13 +287,13 @@ Here we add one custom criterion — `wt_implausible` — that flags all rows fo
 
 ```{r exclusion-criteria}
 excl <- apply_exclusion_criteria(
-  data             = dat,
+  data             = busulfan_sim,
   check_dose_outlier       = TRUE,
   dose_iqr_multiplier      = 3,
   conc_increase_threshold  = 1.5,
   conc_floor               = 1,
   custom_criteria  = list(
-    wt_implausible = dat$ID == 76   # decimal-place weight error
+    wt_implausible = busulfan_sim$ID == 76   # decimal-place weight error
   )
 )
 ```
@@ -319,11 +317,11 @@ removed.
 ## 6. Summary
 
 ```{r summary}
-n_raw     <- nrow(dat)
+n_raw     <- nrow(busulfan_sim)
 n_clean   <- nrow(excl$data_clean)
 n_removed <- n_raw - n_clean
 
-subj_raw   <- length(unique(dat$ID))
+subj_raw   <- length(unique(busulfan_sim$ID))
 subj_clean <- length(unique(excl$data_clean$ID))
 
 cat(sprintf(
