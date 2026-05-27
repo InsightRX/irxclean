@@ -523,7 +523,7 @@ sessionInfo()
 #>  [9] systemfonts_1.3.2  scales_1.4.0       textshaping_1.0.5  yaml_2.3.12       
 #> [13] fastmap_1.2.0      ggplot2_4.0.3      R6_2.6.1           labeling_0.4.3    
 #> [17] vpc_1.2.4          generics_0.1.4     patchwork_1.3.2    knitr_1.51        
-#> [21] tibble_3.3.1       desc_1.4.3         bslib_0.10.0       pillar_1.11.1     
+#> [21] tibble_3.3.1       desc_1.4.3         bslib_0.11.0       pillar_1.11.1     
 #> [25] RColorBrewer_1.1-3 rlang_1.2.0        stringi_1.8.7      cachem_1.1.0      
 #> [29] xfun_0.57          fs_2.1.0           sass_0.4.10        S7_0.2.2          
 #> [33] cli_3.6.6          withr_3.0.2        pkgdown_2.2.0      magrittr_2.0.5    
