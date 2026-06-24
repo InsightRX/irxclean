@@ -1,0 +1,244 @@
+---
+title: "Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width = 8,
+  fig.height = 5
+)
+library(irxclean)
+```
+
+## Overview
+
+This vignette demonstrates the **ferx engine** for model-informed iterative
+observation cleaning.  It mirrors the NONMEM-based workflow in Part 2
+(`busulfan_pt2_modelbased_cleaning`) but uses `engine = "ferx"` instead of
+NONMEM/PsN, requiring only the R package
+[ferx](https://github.com/InsightRX/ferx) -- no external tools.
+
+> **Prerequisites:** This vignette continues from **Part 1**
+> (`busulfan_pt1_gc_exclusion`).  Run Part 1 first and save
+> `busulfan_pt1_ready.csv` to your working directory before proceeding.
+
+```{r check-ferx, include=FALSE}
+has_ferx <- requireNamespace("ferx", quietly = TRUE)
+```
+
+---
+
+## 1. Load the Phase 1 dataset
+
+```{r load-data}
+pt1_file <- "busulfan_pt1_ready.csv"
+
+if (file.exists(pt1_file)) {
+  dat <- read.csv(pt1_file)
+  message("Loaded Phase 1 output: ", pt1_file)
+} else {
+  message(
+    "busulfan_pt1_ready.csv not found -- falling back to raw dataset.\n",
+    "Run busulfan_pt1_gc_exclusion first to generate the cleaned input."
+  )
+  dat <- read.csv(system.file("extdata", "busulfan_sim.csv",
+                               package = "irxclean"))
+}
+
+cat(sprintf(
+  "Patients: %d  |  Rows: %d  |  Observations: %d\n",
+  length(unique(dat$ID)), nrow(dat), sum(dat$EVID == 0)
+))
+```
+
+---
+
+## 2. Define the ferx model
+
+A `.ferx` model file describes the structural PK model, random effects, and
+error model.  For this busulfan dataset we use a one-compartment IV infusion
+model with IIV on CL and V and proportional residual error.
+
+```{r write-model}
+model_text <- '
+[parameters]
+  theta TVCL(4.0, 0.1, 100.0)  ; Clearance
+  theta TVV(15.0, 1.0, 500.0)  ; Volume
+
+  omega ETA_CL ~ 0.09  ; IIV CL
+  omega ETA_V  ~ 0.04  ; IIV V
+
+  sigma PROP_ERR ~ 0.1 (sd)  ; Proportional error
+
+[individual_parameters]
+  CL = TVCL * exp(ETA_CL)
+  V  = TVV  * exp(ETA_V)
+
+[structural_model]
+  ode(states=[central])
+
+[odes]
+  d/dt(central) = -(CL/V) * central
+
+[scaling]
+  y = central / V
+
+[error_model]
+  DV ~ proportional(PROP_ERR)
+
+[fit_options]
+  method  = focei
+  maxiter = 300
+'
+
+model_path <- file.path(tempdir(), "busulfan_1cpt.ferx")
+writeLines(model_text, model_path)
+cat("Model written to:", model_path, "\n")
+```
+
+---
+
+## 3. Iterative observation flagging with ferx
+
+`remove_erroneous_obs()` with `engine = "ferx"` calls `ferx::ferx_fit()`
+at each iteration instead of NONMEM.  The same algorithm applies: identify
+the observation with the largest |CWRES|, remove it, and re-fit.
+
+Results are cached to an RDS file so subsequent renders skip the fitting.
+
+```{r remove-obs, eval=has_ferx}
+cache_file <- "busulfan_ferx_results.RDS"
+
+if (file.exists(cache_file)) {
+  results <- readRDS(cache_file)
+  message("Loaded cached results from ", cache_file)
+} else {
+  results <- remove_erroneous_obs(
+    dat         = dat,
+    mod         = model_path,
+    run_id      = "bu_ferx",
+    n           = 20,
+    engine      = "ferx",
+    ferx_method = "focei",
+    verbose     = TRUE,
+    save_results = FALSE,
+    stability_check = TRUE
+  )
+  saveRDS(results, cache_file)
+  message("Results saved to ", cache_file)
+}
+
+cat("Iterations completed:", nrow(results$rmse), "\n")
+cat("Flagged observations (ranked by |CWRES|):\n")
+print(results$rem[, c("ID", "TIME", "DV", "CWRES")])
+```
+
+```{r fallback, eval=!has_ferx, echo=FALSE}
+message("ferx package not installed -- loading pre-computed NONMEM results as fallback.")
+results <- readRDS(system.file("extdata", "busulfan_results.RDS",
+                                package = "irxclean"))
+```
+
+---
+
+## 4. Removal metrics
+
+The same plotting functions work identically regardless of engine.
+
+```{r metrics-pofv, fig.cap="Change in pseudo-OFV per iteration."}
+plot_removal_metrics(results, metric = "pOFV", verbose = FALSE)
+```
+
+```{r metrics-thetas, fig.cap="THETA estimates normalised to final value."}
+plot_removal_metrics(results, metric = "thetas", verbose = FALSE)
+```
+
+```{r metrics-omegas, fig.cap="OMEGA estimates normalised to final value."}
+plot_removal_metrics(results, metric = "omegas", verbose = FALSE)
+```
+
+```{r metrics-sigmas, fig.cap="SIGMA estimates normalised to final value."}
+plot_removal_metrics(results, metric = "sigmas", verbose = FALSE)
+```
+
+```{r metrics-rmse, fig.cap="nRMSE across iterations."}
+plot_removal_metrics(results, metric = "rmse", verbose = FALSE)
+```
+
+---
+
+## 5. Model stability
+
+```{r stability}
+stability <- check_model_stability(results, threshold_pct = 20)
+print(stability)
+```
+
+```{r stability-flags}
+flag_tbl <- stability_flag_table(stability)
+if (nrow(flag_tbl) > 0) knitr::kable(flag_tbl, digits = 2) else
+  cat("All parameters stable.\n")
+```
+
+---
+
+## 6. Demographic comparison
+
+```{r demographics, fig.width=10, fig.height=7, fig.cap="Demographic comparison: subjects with removed observations vs. the rest of the cohort."}
+plot_demographic_comparison(
+  data             = dat,
+  results          = results,
+  continuous_cols  = c("AGE", "WT", "HT"),
+  categorical_cols = "SEX"
+)
+```
+
+---
+
+## 7. Apply final exclusions
+
+After reviewing the flagged observations, apply user-approved exclusions:
+
+```{r remove-from-data, eval=FALSE}
+cleaned <- remove_observations_from_data(
+  data    = dat,
+  results = results,
+  n       = 10
+)
+
+write.csv(cleaned, "busulfan_ferx_cleaned.csv", row.names = FALSE)
+cat("Cleaned dataset:", nrow(cleaned), "rows\n")
+```
+
+---
+
+## 8. Generate HTML report
+
+```{r report, eval=FALSE}
+generate_report(
+  results              = results,
+  data                 = dat,
+  continuous_cov_cols  = c("AGE", "WT", "HT"),
+  categorical_cov_cols = "SEX",
+  title                = "Busulfan PK -- ferx Model-Informed Cleaning Report",
+  output_file          = "busulfan_ferx_report.html"
+)
+```
+
+---
+
+## Session information
+
+```{r session-info}
+sessionInfo()
+```

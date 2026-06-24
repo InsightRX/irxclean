@@ -12,10 +12,10 @@ apply_exclusion_criteria(
   check_no_tdm = TRUE,
   check_during_infusion = TRUE,
   check_conc_increase = TRUE,
-  conc_increase_threshold = 1.5,
+  conc_increase_threshold = 2,
   conc_floor = 0,
   check_dose_outlier = TRUE,
-  dose_iqr_multiplier = 3,
+  dose_iqr_multiplier = 5,
   custom_criteria = NULL,
   verbose = TRUE
 )
@@ -43,7 +43,7 @@ rises by more than \code{conc_increase_threshold}-fold without an
 intervening dose?  Default \code{TRUE}.}
 
 \item{conc_increase_threshold}{Numeric. Fold-increase threshold for
-flagging concentration elevations.  Default \code{1.5}.}
+flagging concentration elevations.  Default \code{2.0}.}
 
 \item{conc_floor}{Numeric. Minimum preceding concentration for evaluating
 fold-increases (pairs where DV_prev <= \code{conc_floor} are skipped).
@@ -54,7 +54,7 @@ IQR-based outlier across all dose records?  Requires \code{AMT} column.
 Default \code{TRUE}.}
 
 \item{dose_iqr_multiplier}{Numeric. IQR multiplier for dose-outlier
-detection.  Default \code{3}.}
+detection.  Default \code{5}.}
 
 \item{custom_criteria}{Named list of row-level logical vectors (one per
 criterion, length equal to \code{nrow(data)}).  Each vector is added as

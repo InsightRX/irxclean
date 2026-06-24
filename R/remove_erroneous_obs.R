@@ -1,12 +1,13 @@
 #' Iteratively detect potentially erroneous pharmacokinetic observations
 #'
-#' Performs iterative NONMEM-based detection of potentially erroneous
-#' observations in a pharmacokinetic dataset.  The ranked list of flagged
-#' observations is intended for user review before any exclusions are applied
-#' to the final analysis dataset (see \code{remove_observations_from_data()}).
-#' At each iteration the algorithm:
+#' Performs iterative model-based detection of potentially erroneous
+#' observations in a pharmacokinetic dataset.  Supports two estimation
+#' engines: NONMEM (via PsN, the default) and ferx.  The ranked list of
+#' flagged observations is intended for user review before any exclusions
+#' are applied to the final analysis dataset (see
+#' \code{remove_observations_from_data()}).  At each iteration the algorithm:
 #' \enumerate{
-#'   \item Runs NONMEM (via PsN `execute`) on the current dataset.
+#'   \item Fits the model on the current dataset.
 #'   \item Identifies the observation with the highest absolute CWRES.
 #'   \item Removes that observation from the dataset.
 #'   \item Saves parameter estimates and diagnostics for later plotting.
@@ -15,9 +16,15 @@
 #' @param dat File path to the NONMEM-ready `.csv` dataset (with or without
 #'   the `.csv` extension, relative or absolute), **or** an R data frame that
 #'   is already loaded in memory.
-#' @param mod File path to the NONMEM `.mod` control stream (with or without
-#'   the `.mod` extension, relative or absolute), **or** a \code{nm_model}
-#'   list returned by \code{nm_read_model()}.
+#' @param mod File path to the model file.  For \code{engine = "nonmem"}: a
+#'   `.mod` control stream (extension optional), or a \code{nm_model} list
+#'   from \code{nm_read_model()}.  For \code{engine = "ferx"}: a `.ferx`
+#'   model file path.
+#' @param engine Character. Estimation engine to use: \code{"nonmem"} (default,
+#'   requires PsN) or \code{"ferx"} (requires the \pkg{ferx} package).
+#' @param ferx_method Character. Estimation method passed to
+#'   \code{ferx::ferx_fit()} when \code{engine = "ferx"}.  Default
+#'   \code{"focei"}.  Ignored when \code{engine = "nonmem"}.
 #' @param run_id Character. Unique run identifier (e.g. `"err_rem1"`).
 #' @param n Integer. Number of observations to remove.
 #' @param columns Named list specifying column labels in the dataset.
@@ -103,8 +110,14 @@
 #' The three modes can be mixed: you may supply an in-memory data frame for
 #' \code{dat} while pointing \code{mod} at a file path, or vice versa.
 #'
-#' @section PsN requirement:
-#' `execute` and `sumo` must be available on the system `PATH`.
+#' @section Engine requirements:
+#' \itemize{
+#'   \item \strong{NONMEM} (\code{engine = "nonmem"}): PsN commands
+#'     \code{execute} and \code{sumo} must be available on the system
+#'     \code{PATH}.
+#'   \item \strong{ferx} (\code{engine = "ferx"}): the \pkg{ferx} R package
+#'     must be installed.  No external tools are needed.
+#' }
 #'
 #' @examples
 #' \dontrun{
@@ -155,16 +168,24 @@ remove_erroneous_obs <- function(
     mod,
     run_id,
     n,
-    columns        = list(ID = "ID", TIME = "TIME", DV = "DV"),
-    verbose        = TRUE,
-    save_results   = TRUE,
-    save_temp_dir  = FALSE,
+    columns         = list(ID = "ID", TIME = "TIME", DV = "DV"),
+    engine          = c("nonmem", "ferx"),
+    ferx_method     = "focei",
+    verbose         = TRUE,
+    save_results    = TRUE,
+    save_temp_dir   = FALSE,
     stability_check = TRUE
 ) {
   # -- Input validation --------------------------------------------------------
   if (!is.character(run_id)) stop("`run_id` must be a character string.")
   n <- as.integer(n)
   if (is.na(n) || n < 1L) stop("`n` must be a positive integer.")
+  engine <- match.arg(engine)
+
+  if (engine == "ferx" &&
+      !requireNamespace("ferx", quietly = TRUE)) {
+    stop("Package 'ferx' is required when engine = \"ferx\". Please install it.")
+  }
 
   # Resolve dat: file path or data frame
   if (is.character(dat)) {
@@ -180,7 +201,14 @@ remove_erroneous_obs <- function(
   }
 
   # Resolve mod: file path or nm_model list
-  if (is.character(mod)) {
+  if (engine == "ferx") {
+    if (!is.character(mod)) {
+      stop("`mod` must be a .ferx file path when engine = \"ferx\".")
+    }
+    mod_file <- normalizePath(mod, mustWork = FALSE)
+    if (!file.exists(mod_file)) stop(sprintf("Model file not found: %s", mod_file))
+    mod_obj  <- NULL
+  } else if (is.character(mod)) {
     mod_stem <- tools::file_path_sans_ext(mod)
     mod_file <- normalizePath(paste0(mod_stem, ".mod"), mustWork = FALSE)
     if (!file.exists(mod_file)) stop(sprintf("Model file not found: %s", mod_file))
@@ -224,15 +252,21 @@ remove_erroneous_obs <- function(
   }
 
   # Model: copy from disk + parse, or use supplied nm_model list directly
-  if (!is.null(mod_file)) {
-    mod_base  <- basename(mod_file)
-    file.copy(from = mod_file, to = mod_base)
-    nm_model  <- nm_read_model(mod_base)
-    labels_src <- mod_base
+  if (engine == "ferx") {
+    ferx_model_path <- file.path(temp_dir, basename(mod_file))
+    file.copy(from = mod_file, to = ferx_model_path)
+    labels_src <- ferx_model_path
   } else {
-    mod_base   <- NULL
-    nm_model   <- mod_obj
-    labels_src <- NULL  # will fall back to new_mod_file after it is written
+    if (!is.null(mod_file)) {
+      mod_base  <- basename(mod_file)
+      file.copy(from = mod_file, to = mod_base)
+      nm_model  <- nm_read_model(mod_base)
+      labels_src <- mod_base
+    } else {
+      mod_base   <- NULL
+      nm_model   <- mod_obj
+      labels_src <- NULL  # will fall back to new_mod_file after it is written
+    }
   }
 
   total_dv  <- sum(data$EVID == 0, na.rm = TRUE)
@@ -251,31 +285,29 @@ remove_erroneous_obs <- function(
   rem_list  <- vector("list", n)
   rmse_list <- vector("list", n)
 
-  # Modify model: update $DATA and $TABLE blocks
-  if (verbose && length(nm_model$DATA) > 1) {
-    message(sprintf("Found %d $DATA blocks - using the first.", length(nm_model$DATA)))
-  }
-  if (verbose && length(nm_model$TABLE) > 1) {
-    message(sprintf("Found %d $TABLE blocks - using the first.", length(nm_model$TABLE)))
-  }
+  # NONMEM-specific model preparation
+  if (engine == "nonmem") {
+    # Modify model: update $DATA and $TABLE blocks
+    if (verbose && length(nm_model$DATA) > 1) {
+      message(sprintf("Found %d $DATA blocks - using the first.", length(nm_model$DATA)))
+    }
+    if (verbose && length(nm_model$TABLE) > 1) {
+      message(sprintf("Found %d $TABLE blocks - using the first.", length(nm_model$TABLE)))
+    }
 
-  nm_model$DATA  <- sprintf("$DATA %s.csv IGNORE@", run_id)
-  nm_model$TABLE <- sprintf(
-    "$TABLE ID EVID MDV TIME DV PRED CWRES ONEHEADER NOPRINT FILE = %s.tab",
-    run_id
-  )
+    nm_model$DATA  <- sprintf("$DATA %s.csv IGNORE@", run_id)
+    nm_model$TABLE <- sprintf(
+      "$TABLE ID EVID MDV TIME DV PRED CWRES ONEHEADER NOPRINT FILE = %s.tab",
+      run_id
+    )
 
-  new_mod_file <- paste0(run_id, ".mod")
-  if (verbose) message("Writing modified model file for iterative runs.")
-  nm_write_model(nm_model, new_mod_file, overwrite = TRUE)
+    new_mod_file <- paste0(run_id, ".mod")
+    if (verbose) message("Writing modified model file for iterative runs.")
+    nm_write_model(nm_model, new_mod_file, overwrite = TRUE)
+  }
 
   # -- Iterative removal loop ---------------------------------------------------
   for (i in seq_len(n)) {
-    csv_path <- paste0(run_id, ".csv")
-    writeLines(paste0("@", paste(names(data), collapse = ",")), csv_path)
-    utils::write.table(data, csv_path, append = TRUE, sep = ",",
-                       col.names = FALSE, row.names = FALSE, quote = FALSE)
-
     if (verbose) {
       message(sprintf(
         "\n-- Iteration %d of %d (dataset rows: %d) ----------------------",
@@ -283,54 +315,99 @@ remove_erroneous_obs <- function(
       ))
     }
 
-    fit_dir <- paste0("iteration_", run_id, "_", i - 1L)
-    system(
-      command       = paste0("execute ", new_mod_file, " --dir=", fit_dir),
-      intern        = TRUE,
-      ignore.stdout = !verbose,
-      ignore.stderr = !verbose
-    )
-    system(
-      command       = paste0("sumo ", run_id, ".lst"),
-      intern        = TRUE,
-      ignore.stdout = !verbose,
-      ignore.stderr = !verbose
-    )
+    if (engine == "ferx") {
+      # -- ferx engine path ----------------------------------------------------
+      csv_path <- file.path(temp_dir, paste0(run_id, ".csv"))
+      ferx_write_data(data, csv_path)
 
-    # Parameter estimates
-    pars   <- nm_read_pars(run_id)
-    phifile <- paste0(run_id, ".phi")
-    if (!file.exists(phifile)) stop(sprintf("PHI file not found: %s", phifile))
-
-    OFV <- utils::read.table(phifile, skip = 1, header = TRUE)
-    par <- data.frame(pars) |>
-      dplyr::mutate(
-        ITERATION = i,
-        nOFV = sum(OFV$OBJ) / (total_dv - i)
+      fit_result <- ferx_run_iteration(
+        model_path = ferx_model_path,
+        data       = data,
+        run_id     = run_id,
+        iteration  = i,
+        method     = ferx_method,
+        verbose    = verbose
       )
-    par_list[[i]] <- par
 
-    phi <- utils::read.table(phifile, skip = 1, header = TRUE) |>
-      dplyr::select("ID", "OBJ") |>
-      dplyr::mutate(ITERATION = i)
-    phi_list[[i]] <- phi
+      pars <- ferx_read_pars(fit_result)
+      par <- data.frame(pars) |>
+        dplyr::mutate(
+          ITERATION = i,
+          nOFV = fit_result$ofv / (total_dv - i)
+        )
+      par_list[[i]] <- par
 
-    # Results table
-    tabfile <- paste0(run_id, ".tab")
-    if (!file.exists(tabfile)) stop(sprintf("Table file not found: %s", tabfile))
+      phi <- fit_result$individual_obj |>
+        dplyr::mutate(ITERATION = i)
+      phi_list[[i]] <- phi
 
-    result <- tryCatch(
-      suppressWarnings(vpc::read_table_nm(tabfile)),
-      error = function(e) {
-        if (verbose) message("vpc::read_table_nm failed; falling back to read.table.")
-        utils::read.table(tabfile, header = TRUE, skip = 1)
-      }
-    )
+      result <- fit_result$sdtab
 
-    # Observation with the highest |CWRES|
-    result_rem <- result |>
-      dplyr::mutate(.row_idx = dplyr::row_number()) |>
-      dplyr::filter(.data$MDV == 0) |>
+    } else {
+      # -- NONMEM engine path --------------------------------------------------
+      csv_path <- paste0(run_id, ".csv")
+      writeLines(paste0("@", paste(names(data), collapse = ",")), csv_path)
+      utils::write.table(data, csv_path, append = TRUE, sep = ",",
+                         col.names = FALSE, row.names = FALSE, quote = FALSE)
+
+      fit_dir <- paste0("iteration_", run_id, "_", i - 1L)
+      system(
+        command       = paste0("execute ", new_mod_file, " --dir=", fit_dir),
+        intern        = TRUE,
+        ignore.stdout = !verbose,
+        ignore.stderr = !verbose
+      )
+      system(
+        command       = paste0("sumo ", run_id, ".lst"),
+        intern        = TRUE,
+        ignore.stdout = !verbose,
+        ignore.stderr = !verbose
+      )
+
+      # Parameter estimates
+      pars   <- nm_read_pars(run_id)
+      phifile <- paste0(run_id, ".phi")
+      if (!file.exists(phifile)) stop(sprintf("PHI file not found: %s", phifile))
+
+      OFV <- utils::read.table(phifile, skip = 1, header = TRUE)
+      par <- data.frame(pars) |>
+        dplyr::mutate(
+          ITERATION = i,
+          nOFV = sum(OFV$OBJ) / (total_dv - i)
+        )
+      par_list[[i]] <- par
+
+      phi <- utils::read.table(phifile, skip = 1, header = TRUE) |>
+        dplyr::select("ID", "OBJ") |>
+        dplyr::mutate(ITERATION = i)
+      phi_list[[i]] <- phi
+
+      # Results table
+      tabfile <- paste0(run_id, ".tab")
+      if (!file.exists(tabfile)) stop(sprintf("Table file not found: %s", tabfile))
+
+      result <- tryCatch(
+        suppressWarnings(vpc::read_table_nm(tabfile)),
+        error = function(e) {
+          if (verbose) message("vpc::read_table_nm failed; falling back to read.table.")
+          utils::read.table(tabfile, header = TRUE, skip = 1)
+        }
+      )
+    }
+
+    # -- Common: identify and remove max |CWRES| observation --------------------
+    # ferx sdtab contains only observation rows (no MDV column); NONMEM result
+    # tables include all rows and need filtering on MDV == 0.
+    if (engine == "ferx") {
+      obs_result <- result |>
+        dplyr::mutate(.obs_idx = dplyr::row_number())
+    } else {
+      obs_result <- result |>
+        dplyr::mutate(.row_idx = dplyr::row_number()) |>
+        dplyr::filter(.data$MDV == 0)
+    }
+
+    result_rem <- obs_result |>
       dplyr::arrange(dplyr::desc(abs(.data$CWRES))) |>
       dplyr::slice(1L) |>
       dplyr::mutate(across(c("TIME", "DV", "ID"), as.numeric))
@@ -355,16 +432,31 @@ remove_erroneous_obs <- function(
     )
 
     # Remove row from dataset for next iteration
-    current_nm_data <- utils::read.csv(paste0(run_id, ".csv"))
-    row_idx <- result_rem$.row_idx
-    if (is.na(row_idx) || row_idx < 1L || row_idx > nrow(current_nm_data)) {
-      stop("Row index for removal is out of range. Check dataset and model alignment.")
+    if (engine == "ferx") {
+      # ferx sdtab indices don't map to full data; match by ID + TIME + DV
+      id_col  <- columns$ID
+      time_col <- columns$TIME
+      dv_col  <- columns$DV
+      match_idx <- which(
+        data[[id_col]]  == result_rem$ID &
+        data[[time_col]] == result_rem$TIME &
+        data[[dv_col]]  == result_rem$DV
+      )
+      if (length(match_idx) == 0L) {
+        stop("Could not match removed observation back to dataset. Check column alignment.")
+      }
+      data <- data[-match_idx[1L], ]
+    } else {
+      current_nm_data <- utils::read.csv(paste0(run_id, ".csv"))
+      row_idx <- result_rem$.row_idx
+      if (is.na(row_idx) || row_idx < 1L || row_idx > nrow(current_nm_data)) {
+        stop("Row index for removal is out of range. Check dataset and model alignment.")
+      }
+      data <- current_nm_data[-row_idx, ]
     }
-    data <- current_nm_data[-row_idx, ]
 
     # RMSE
-    rmse_val <- result |>
-      dplyr::filter(.data$MDV == 0) |>
+    rmse_val <- obs_result |>
       dplyr::mutate(rmse = .calculate_nrmse(.data$DV, .data$PRED)) |>
       dplyr::slice(1L) |>
       dplyr::mutate(ITERATION = i) |>
@@ -382,12 +474,19 @@ remove_erroneous_obs <- function(
     rmse = dplyr::bind_rows(rmse_list) |> dplyr::distinct(.data$rmse, .data$ITERATION)
   )
 
-  # Parameter labels parsed from the .mod file (used for plot labels).
-  # Use the original file when available; fall back to the rewritten run file.
-  final$param_labels <- tryCatch(
-    nm_parse_param_labels(if (!is.null(labels_src)) labels_src else new_mod_file),
-    error = function(e) list(thetas = character(0), omegas = character(0))
-  )
+  # Parameter labels parsed from the model file (used for plot labels).
+  if (engine == "ferx") {
+    final$param_labels <- tryCatch(
+      ferx_parse_param_labels(labels_src),
+      error = function(e) list(thetas = character(0), omegas = character(0), sigmas = character(0))
+    )
+  } else {
+    # Use the original file when available; fall back to the rewritten run file.
+    final$param_labels <- tryCatch(
+      nm_parse_param_labels(if (!is.null(labels_src)) labels_src else new_mod_file),
+      error = function(e) list(thetas = character(0), omegas = character(0))
+    )
+  }
 
   # -- Stability check ----------------------------------------------------------
   if (stability_check) {

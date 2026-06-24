@@ -9,10 +9,10 @@ assess_data_quality(
   columns = list(ID = "ID", TIME = "TIME", DV = "DV", EVID = "EVID", MDV = "MDV"),
   covariate_cols = NULL,
   categorical_cols = NULL,
-  iqr_multiplier = 3,
+  iqr_multiplier = 5,
   tad_col = NULL,
   tad_bin_width = NULL,
-  conc_increase_threshold = 1.5,
+  conc_increase_threshold = 2,
   conc_floor = 0,
   verbose = TRUE
 )
@@ -31,7 +31,7 @@ names.  Currently used only for completeness in the missing-data summary.}
 
 \item{iqr_multiplier}{Numeric. IQR multiplier for outlier bounds, applied to
 both covariate outlier detection and concentration bin outlier detection.
-Default `3`.}
+Default `5`.}
 
 \item{tad_col}{Character or \code{NULL}.  Name of a pre-computed
 time-after-dose column.  \code{NULL} (default) triggers auto-detection:
@@ -42,11 +42,11 @@ if no dose records exist, falls back to \code{TIME}.}
 \item{tad_bin_width}{Numeric. Width of TAD bins used when checking for
 concentration outliers within each TAD window.  \code{NULL} (default)
 auto-selects a round value from the TAD range.  Bins with fewer than
-4 observations are skipped.}
+8 observations are skipped.}
 
 \item{conc_increase_threshold}{Numeric. Minimum fold-increase in
 concentration (without intervening dose) to flag as suspicious.
-Default `1.5`.}
+Default `2.0`.}
 
 \item{conc_floor}{Numeric. Minimum value for the preceding concentration
 when evaluating fold-increases.  Pairs where the earlier DV is at or
