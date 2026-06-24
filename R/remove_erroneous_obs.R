@@ -303,7 +303,9 @@ remove_erroneous_obs <- function(
 
     new_mod_file <- paste0(run_id, ".mod")
     if (verbose) message("Writing modified model file for iterative runs.")
-    nm_write_model(nm_model, new_mod_file, overwrite = TRUE)
+    mod_tmp_file <- paste0(new_mod_file, ".tmp")
+    nm_write_model(nm_model, mod_tmp_file, overwrite = TRUE)
+    file.rename(mod_tmp_file, new_mod_file)
   }
 
   # -- Iterative removal loop ---------------------------------------------------
@@ -345,24 +347,36 @@ remove_erroneous_obs <- function(
 
     } else {
       # -- NONMEM engine path --------------------------------------------------
-      csv_path <- paste0(run_id, ".csv")
-      writeLines(paste0("@", paste(names(data), collapse = ",")), csv_path)
-      utils::write.table(data, csv_path, append = TRUE, sep = ",",
+      csv_path     <- paste0(run_id, ".csv")
+      csv_tmp_path <- paste0(csv_path, ".tmp")
+      writeLines(paste0("@", paste(names(data), collapse = ",")), csv_tmp_path)
+      utils::write.table(data, csv_tmp_path, append = TRUE, sep = ",",
                          col.names = FALSE, row.names = FALSE, quote = FALSE)
+      file.rename(csv_tmp_path, csv_path)
 
-      fit_dir <- paste0("iteration_", run_id, "_", i - 1L)
-      system(
+      fit_dir      <- paste0("iteration_", run_id, "_", i - 1L)
+      exit_execute <- system(
         command       = paste0("execute ", new_mod_file, " --dir=", fit_dir),
-        intern        = TRUE,
         ignore.stdout = !verbose,
         ignore.stderr = !verbose
       )
-      system(
+      if (exit_execute != 0L) {
+        stop(sprintf(
+          "PsN `execute` failed (exit code %d) at iteration %d. Check output in %s.",
+          exit_execute, i, fit_dir
+        ))
+      }
+      exit_sumo <- system(
         command       = paste0("sumo ", run_id, ".lst"),
-        intern        = TRUE,
         ignore.stdout = !verbose,
         ignore.stderr = !verbose
       )
+      if (exit_sumo != 0L) {
+        warning(sprintf(
+          "PsN `sumo` returned non-zero exit code %d at iteration %d.",
+          exit_sumo, i
+        ))
+      }
 
       # Parameter estimates
       pars   <- nm_read_pars(run_id)

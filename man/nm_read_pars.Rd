@@ -14,6 +14,6 @@ The `.ext` suffix is appended automatically if absent.}
 A named list of parameter values.
 }
 \description{
-Returns the final estimates (iteration `-1000000000`).
+Returns the final estimates (iteration \code{-1000000000}).
 }
 \keyword{internal}

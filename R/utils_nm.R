@@ -67,6 +67,8 @@ nm_read_model <- function(modelfile = NULL, as_block = FALSE, code = NULL) {
 #' @param modelfile Output file path.
 #' @param overwrite Overwrite an existing file?  Default `FALSE`.
 #'
+#' @return Invisibly returns \code{modelfile} (the output file path).
+#'
 #' @keywords internal
 nm_write_model <- function(model = NULL, modelfile = NULL, overwrite = FALSE) {
   if (is.null(modelfile)) stop("Please specify an output NONMEM modelfile.")
@@ -90,9 +92,13 @@ nm_write_model <- function(model = NULL, modelfile = NULL, overwrite = FALSE) {
 }
 
 
+# Sentinel value NONMEM writes in the ITERATION column of .ext files to mark
+# the row containing the final parameter estimates.
+NM_FINAL_ITER <- -1000000000L
+
 #' Read population parameter estimates from a NONMEM `.ext` file
 #'
-#' Returns the final estimates (iteration `-1000000000`).
+#' Returns the final estimates (iteration \code{-1000000000}).
 #'
 #' @param model Model name (character, e.g. `"run1"`) or run number (numeric).
 #'   The `.ext` suffix is appended automatically if absent.
@@ -107,7 +113,7 @@ nm_read_pars <- function(model) {
   if (!file.exists(parfile)) stop(paste0("Parameter file not found: ", parfile))
   pars <- utils::read.table(parfile, skip = 1, header = TRUE)
   names(pars) <- stringr::str_replace_all(names(pars), "\\.$", "")
-  pars <- as.list(pars[pars$ITERATION == -1000000000, , drop = FALSE])
+  pars <- as.list(pars[pars$ITERATION == NM_FINAL_ITER, , drop = FALSE])
   pars$ITERATION <- NULL
   pars
 }

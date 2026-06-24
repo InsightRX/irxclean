@@ -465,3 +465,7 @@ write.csv(dat, outfile, row.names = FALSE, quote = FALSE)
 message("\nDataset saved: ", outfile)
 message("Rows: ", nrow(dat), "  |  Patients: ", n,
         "  |  Observations: ", sum(dat$EVID == 0))
+
+# Update the package data object
+busulfan_sim <- dat
+usethis::use_data(busulfan_sim, overwrite = TRUE)

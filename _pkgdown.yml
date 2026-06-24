@@ -17,12 +17,51 @@ navbar:
       aria-label: Home
 
 articles:
-  - title: Workflow
-    navbar: ~
-    contents:
-      - irxclean_workflow
   - title: Example
     navbar: Example
     contents:
       - busulfan_pt1_gc_exclusion
       - busulfan_pt2_modelbased_cleaning
+
+reference:
+  - title: Gross data quality
+    contents:
+      - assess_data_quality
+      - plot.irxclean_quality
+      - print.irxclean_quality
+  - title: Exclusion criteria
+    contents:
+      - apply_exclusion_criteria
+      - print.irxclean_exclusions
+  - title: Model-based iterative cleaning
+    contents:
+      - remove_erroneous_obs
+      - remove_influential_individuals
+      - load_removal_results
+      - calculate_pofv_change
+  - title: Model stability
+    contents:
+      - check_model_stability
+      - stability_flag_table
+      - plot.irxclean_stability
+      - print.irxclean_stability
+  - title: Dataset filtering
+    contents:
+      - remove_observations_from_data
+      - remove_individuals_from_data
+  - title: Visualization & reporting
+    contents:
+      - plot_removal_metrics
+      - plot_influential_dofv
+      - plot_demographic_comparison
+      - print.irxclean_demographics
+      - generate_report
+  - title: NONMEM utilities
+    contents:
+      - nm_read_model
+      - nm_write_model
+      - nm_read_pars
+      - nm_parse_param_labels
+  - title: Datasets
+    contents:
+      - busulfan_sim

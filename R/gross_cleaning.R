@@ -369,7 +369,11 @@ plot.irxclean_quality <- function(x, ...) {
       cf,
       ggplot2::aes(x = .data$RATIO)
     ) +
-      ggplot2::geom_histogram(bins = 20, fill = "#00769E", colour = "white") +
+      ggplot2::geom_histogram(
+        bins   = max(5L, min(20L, ceiling(log2(nrow(cf)) + 1L))),
+        fill   = "#00769E",
+        colour = "white"
+      ) +
       ggplot2::labs(
         title    = "Concentration increases without intervening dose",
         subtitle = "Distribution of concentration fold-increases",

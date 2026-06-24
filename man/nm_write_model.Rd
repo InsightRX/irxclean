@@ -13,6 +13,9 @@ nm_write_model(model = NULL, modelfile = NULL, overwrite = FALSE)
 
 \item{overwrite}{Overwrite an existing file?  Default `FALSE`.}
 }
+\value{
+Invisibly returns \code{modelfile} (the output file path).
+}
 \description{
 Write a NONMEM model object to a `.mod` file
 }

@@ -11,8 +11,10 @@
 #' genuine patient population subgroup or an unusual but valid measurement.
 #' Final exclusion decisions rest with the analyst.
 #'
-#' Matching is performed on rounded (`3` decimal places) `ID`, `TIME`, and
-#' `DV` values.  A warning is raised if the number of rows removed does not
+#' Matching is performed on a composite key of rounded (`3` decimal places)
+#' `ID`, `TIME`, and `DV` values concatenated together, so that each flagged
+#' observation is identified as a unit rather than by independent column
+#' membership.  A warning is raised if the number of rows removed does not
 #' equal `n`.
 #'
 #' @param data A data frame containing the original NONMEM dataset.
@@ -52,14 +54,22 @@ remove_observations_from_data <- function(
   time_col <- columns$TIME
   dv_col   <- columns$DV
 
-  new_data <- data |>
-    dplyr::filter(
-      !(
-        round(.data[[id_col]],   3) %in% round(rm[[id_col]],   3) &
-        round(.data[[time_col]], 3) %in% round(rm[[time_col]], 3) &
-        round(.data[[dv_col]],   3) %in% round(rm[[dv_col]],   3)
-      )
-    )
+  # Build composite keys to avoid false matches when individual column values
+  # coincide across different observations (e.g. two rows sharing the same TIME
+  # but different IDs would both be incorrectly matched by independent %in%).
+  data_keys <- paste(
+    round(data[[id_col]],   3),
+    round(data[[time_col]], 3),
+    round(data[[dv_col]],   3),
+    sep = "|"
+  )
+  rm_keys <- paste(
+    round(rm[[id_col]],   3),
+    round(rm[[time_col]], 3),
+    round(rm[[dv_col]],   3),
+    sep = "|"
+  )
+  new_data <- data[!data_keys %in% rm_keys, , drop = FALSE]
 
   n_requested <- nrow(rm)
   n_removed   <- nrow(data) - nrow(new_data)

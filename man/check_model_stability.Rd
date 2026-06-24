@@ -4,7 +4,12 @@
 \alias{check_model_stability}
 \title{Check model stability across removal iterations}
 \usage{
-check_model_stability(results, threshold_pct = 20, verbose = TRUE)
+check_model_stability(
+  results,
+  threshold_pct = 20,
+  late_window_fraction = 1/3,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{results}{A results list from \code{remove_erroneous_obs()} or
@@ -14,6 +19,10 @@ check_model_stability(results, threshold_pct = 20, verbose = TRUE)
 is considered to have high variability.  Also used (as
 \code{threshold_pct / 4}) to assess late-iteration stability.
 Default 20 (i.e. 20\%).}
+
+\item{late_window_fraction}{Numeric. Fraction of iterations (from the end)
+used to assess late-stage CV stability.  Default \code{1/3} (final
+third, minimum 2 iterations).}
 
 \item{verbose}{Logical. Print a stability summary to the console?
 Default TRUE.}

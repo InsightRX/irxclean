@@ -39,8 +39,10 @@ A flagged observation is not necessarily erroneous; it may represent a
 genuine patient population subgroup or an unusual but valid measurement.
 Final exclusion decisions rest with the analyst.
 
-Matching is performed on rounded (`3` decimal places) `ID`, `TIME`, and
-`DV` values.  A warning is raised if the number of rows removed does not
+Matching is performed on a composite key of rounded (`3` decimal places)
+`ID`, `TIME`, and `DV` values concatenated together, so that each flagged
+observation is identified as a unit rather than by independent column
+membership.  A warning is raised if the number of rows removed does not
 equal `n`.
 }
 
