@@ -10,12 +10,12 @@ remove_erroneous_obs(
   run_id,
   n,
   columns = list(ID = "ID", TIME = "TIME", DV = "DV"),
-  engine = c("nonmem", "ferx"),
-  ferx_method = "focei",
   verbose = TRUE,
   save_results = TRUE,
   save_temp_dir = FALSE,
-  stability_check = TRUE
+  stability_check = TRUE,
+  engine = c("nonmem", "ferx"),
+  ...
 )
 }
 \arguments{
@@ -35,13 +35,6 @@ model file path.}
 \item{columns}{Named list specifying column labels in the dataset.
 Default: `list(ID = "ID", TIME = "TIME", DV = "DV")`.}
 
-\item{engine}{Character. Estimation engine to use: \code{"nonmem"} (default,
-requires PsN) or \code{"ferx"} (requires the \pkg{ferx} package).}
-
-\item{ferx_method}{Character. Estimation method passed to
-\code{ferx::ferx_fit()} when \code{engine = "ferx"}.  Default
-\code{"focei"}.  Ignored when \code{engine = "nonmem"}.}
-
 \item{verbose}{Logical. Print progress messages?  Default `TRUE`.}
 
 \item{save_results}{Logical. Save an `.RDS` results file to disk?
@@ -53,6 +46,12 @@ the current working directory (`TRUE`) or delete it after completion
 
 \item{stability_check}{Logical. Append model stability metrics to the
 returned results?  Default `TRUE`.  See [check_model_stability()].}
+
+\item{engine}{Character. Estimation engine to use: \code{"nonmem"} (default,
+requires PsN) or \code{"ferx"} (requires the \pkg{ferx} package).}
+
+\item{...}{Additional arguments passed to \code{ferx::ferx_fit()} when
+\code{engine = "ferx"}.  Ignored when \code{engine = "nonmem"}.}
 }
 \value{
 A list containing:

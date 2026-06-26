@@ -10,7 +10,8 @@ ferx_run_iteration(
   run_id,
   iteration,
   method = "focei",
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ ferx_run_iteration(
 \item{method}{Character. Estimation method passed to `ferx::ferx_fit()`.}
 
 \item{verbose}{Logical. Print progress?}
+
+\item{...}{Additional arguments passed to `ferx::ferx_fit()`.}
 }
 \value{
 A named list with elements: `sdtab`, `theta`, `omega`, `sigma`,

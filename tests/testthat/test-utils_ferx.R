@@ -71,6 +71,27 @@ test_that("ferx_parse_param_labels extracts labels from a .ferx file", {
   expect_equal(labels$sigmas[["SIGMA.1.1"]], "Proportional error")
 })
 
+test_that("ferx_parse_param_labels treats unrecognized prefixes as thetas", {
+  tmp <- tempfile(fileext = ".ferx")
+  writeLines(c(
+    "[parameters]",
+    "tvCL = 10   ; Clearance",
+    "ka   = 1.5  ; Absorption rate",
+    "omega_CL = 0.09 ; IIV CL",
+    "",
+    "[model]"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  labels <- ferx_parse_param_labels(tmp)
+
+  # Both tvCL and ka should be counted as thetas
+
+  expect_equal(labels$thetas[["THETA1"]], "Clearance")
+  expect_equal(labels$thetas[["THETA2"]], "Absorption rate")
+  expect_equal(labels$omegas[["OMEGA.1.1"]], "IIV CL")
+})
+
 test_that("ferx_parse_param_labels returns empty when no [parameters] block", {
   tmp <- tempfile(fileext = ".ferx")
   writeLines(c(
@@ -106,6 +127,19 @@ test_that("ferx_write_data writes a CSV file", {
   result <- utils::read.csv(tmp)
   expect_equal(nrow(result), 3L)
   expect_equal(names(result), c("ID", "TIME", "DV"))
+})
+
+test_that("ferx_write_data quotes character columns correctly", {
+  tmp <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp))
+  df <- data.frame(
+    ID = 1:2, TIME = c(0, 1), DV = c(0, 10),
+    NOTE = c("a,b", "c"),
+    stringsAsFactors = FALSE
+  )
+  ferx_write_data(df, tmp)
+  result <- utils::read.csv(tmp)
+  expect_equal(result$NOTE, c("a,b", "c"))
 })
 
 # =============================================================================

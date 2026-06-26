@@ -172,11 +172,11 @@ test_that("remove_erroneous_obs works end-to-end with ferx engine", {
     mod             = model_path,
     run_id          = "ferx_e2e",
     n               = n_remove,
-    engine          = "ferx",
-    ferx_method     = "focei",
     verbose         = FALSE,
     save_results    = FALSE,
-    stability_check = TRUE
+    stability_check = TRUE,
+    engine          = "ferx",
+    method          = "focei"
   )
 
   # Structure checks

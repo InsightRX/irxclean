@@ -12,13 +12,14 @@
 #' @param iteration Integer. Current iteration number.
 #' @param method Character. Estimation method passed to `ferx::ferx_fit()`.
 #' @param verbose Logical. Print progress?
+#' @param ... Additional arguments passed to `ferx::ferx_fit()`.
 #'
 #' @return A named list with elements: `sdtab`, `theta`, `omega`, `sigma`,
 #'   `ofv`, `individual_obj`.
 #'
 #' @keywords internal
 ferx_run_iteration <- function(model_path, data, run_id, iteration,
-                               method = "focei", verbose = TRUE) {
+                               method = "focei", verbose = TRUE, ...) {
   if (!requireNamespace("ferx", quietly = TRUE)) {
     stop("Package 'ferx' is required when engine = \"ferx\". Please install it.")
   }
@@ -39,7 +40,8 @@ ferx_run_iteration <- function(model_path, data, run_id, iteration,
     data       = data_path,
     method     = method,
     covariance = FALSE,
-    verbose    = verbose
+    verbose    = verbose,
+    ...
   )
 
   # Individual OBJ: one value per subject from EBE_OFV column in sdtab
@@ -187,20 +189,21 @@ ferx_parse_param_labels <- function(model_path) {
     name_part <- trimws(sub("\\s*[=;].*", "", line))
     name_lower <- tolower(name_part)
 
-    if (grepl("^theta|^tv|^pop", name_lower, ignore.case = TRUE)) {
-      theta_idx <- theta_idx + 1L
-      if (!is.null(label) && nzchar(label)) {
-        theta_labels[paste0("THETA", theta_idx)] <- label
-      }
-    } else if (grepl("^omega|^iiv|^eta", name_lower, ignore.case = TRUE)) {
+    if (grepl("^omega|^iiv|^eta", name_lower)) {
       omega_idx <- omega_idx + 1L
       if (!is.null(label) && nzchar(label)) {
         omega_labels[paste0("OMEGA.", omega_idx, ".", omega_idx)] <- label
       }
-    } else if (grepl("^sigma|^err|^eps", name_lower, ignore.case = TRUE)) {
+    } else if (grepl("^sigma|^err|^eps", name_lower)) {
       sigma_idx <- sigma_idx + 1L
       if (!is.null(label) && nzchar(label)) {
         sigma_labels[paste0("SIGMA.", sigma_idx, ".", sigma_idx)] <- label
+      }
+    } else {
+      # Any parameter not recognized as omega/sigma is treated as a theta
+      theta_idx <- theta_idx + 1L
+      if (!is.null(label) && nzchar(label)) {
+        theta_labels[paste0("THETA", theta_idx)] <- label
       }
     }
   }
@@ -216,5 +219,5 @@ ferx_parse_param_labels <- function(model_path) {
 #'
 #' @keywords internal
 ferx_write_data <- function(data, path) {
-  utils::write.csv(data, file = path, row.names = FALSE, quote = FALSE)
+  utils::write.csv(data, file = path, row.names = FALSE, quote = TRUE)
 }

@@ -124,15 +124,15 @@ if (file.exists(cache_file)) {
   message("Loaded cached results from ", cache_file)
 } else {
   results <- remove_erroneous_obs(
-    dat         = dat,
-    mod         = model_path,
-    run_id      = "bu_ferx",
-    n           = 20,
-    engine      = "ferx",
-    ferx_method = "focei",
-    verbose     = TRUE,
-    save_results = FALSE,
-    stability_check = TRUE
+    dat             = dat,
+    mod             = model_path,
+    run_id          = "bu_ferx",
+    n               = 20,
+    verbose         = TRUE,
+    save_results    = FALSE,
+    stability_check = TRUE,
+    engine          = "ferx",
+    method          = "focei"
   )
   saveRDS(results, cache_file)
   message("Results saved to ", cache_file)
