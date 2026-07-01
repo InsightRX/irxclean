@@ -12,7 +12,8 @@ Description: Provides tools for flagging potentially erroneous pharmacokinetic
     model-informed iterative approaches. Includes functionality for gross data
     quality assessment (covariate distribution outlier detection, concentration
     anomalies), model-dependent iterative flagging based on conditional weighted
-    residuals (CWRES) via Perl-speaks-NONMEM (PsN), model stability monitoring
+    residuals (CWRES) via Perl-speaks-NONMEM (PsN) or the ferx estimation
+    engine, model stability monitoring
     across iterations, and demographic comparison of subjects with flagged
     observations versus the full dataset. An automated report can be generated
     summarising all findings. Final exclusion decisions remain with the user
@@ -37,7 +38,11 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    withr
+    withr,
+    scales,
+    ferx
+Remotes:
+    ferx=FeRx-NLME/ferx-r
 Config/testthat/edition: 3
 RoxygenNote: 7.3.3
 VignetteBuilder: knitr

@@ -13,7 +13,9 @@ remove_erroneous_obs(
   verbose = TRUE,
   save_results = TRUE,
   save_temp_dir = FALSE,
-  stability_check = TRUE
+  stability_check = TRUE,
+  engine = c("nonmem", "ferx"),
+  ...
 )
 }
 \arguments{
@@ -21,9 +23,10 @@ remove_erroneous_obs(
 the `.csv` extension, relative or absolute), **or** an R data frame that
 is already loaded in memory.}
 
-\item{mod}{File path to the NONMEM `.mod` control stream (with or without
-the `.mod` extension, relative or absolute), **or** a \code{nm_model}
-list returned by \code{nm_read_model()}.}
+\item{mod}{File path to the model file.  For \code{engine = "nonmem"}: a
+`.mod` control stream (extension optional), or a \code{nm_model} list
+from \code{nm_read_model()}.  For \code{engine = "ferx"}: a `.ferx`
+model file path.}
 
 \item{run_id}{Character. Unique run identifier (e.g. `"err_rem1"`).}
 
@@ -43,6 +46,12 @@ the current working directory (`TRUE`) or delete it after completion
 
 \item{stability_check}{Logical. Append model stability metrics to the
 returned results?  Default `TRUE`.  See [check_model_stability()].}
+
+\item{engine}{Character. Estimation engine to use: \code{"nonmem"} (default,
+requires PsN) or \code{"ferx"} (requires the \pkg{ferx} package).}
+
+\item{...}{Additional arguments passed to \code{ferx::ferx_fit()} when
+\code{engine = "ferx"}.  Ignored when \code{engine = "nonmem"}.}
 }
 \value{
 A list containing:
@@ -60,13 +69,14 @@ A list containing:
 }
 }
 \description{
-Performs iterative NONMEM-based detection of potentially erroneous
-observations in a pharmacokinetic dataset.  The ranked list of flagged
-observations is intended for user review before any exclusions are applied
-to the final analysis dataset (see \code{remove_observations_from_data()}).
-At each iteration the algorithm:
+Performs iterative model-based detection of potentially erroneous
+observations in a pharmacokinetic dataset.  Supports two estimation
+engines: NONMEM (via PsN, the default) and ferx.  The ranked list of
+flagged observations is intended for user review before any exclusions
+are applied to the final analysis dataset (see
+\code{remove_observations_from_data()}).  At each iteration the algorithm:
 \enumerate{
-  \item Runs NONMEM (via PsN `execute`) on the current dataset.
+  \item Fits the model on the current dataset.
   \item Identifies the observation with the highest absolute CWRES.
   \item Removes that observation from the dataset.
   \item Saves parameter estimates and diagnostics for later plotting.
@@ -132,9 +142,15 @@ The three modes can be mixed: you may supply an in-memory data frame for
 \code{dat} while pointing \code{mod} at a file path, or vice versa.
 }
 
-\section{PsN requirement}{
+\section{Engine requirements}{
 
-`execute` and `sumo` must be available on the system `PATH`.
+\itemize{
+  \item \strong{NONMEM} (\code{engine = "nonmem"}): PsN commands
+    \code{execute} and \code{sumo} must be available on the system
+    \code{PATH}.
+  \item \strong{ferx} (\code{engine = "ferx"}): the \pkg{ferx} R package
+    must be installed.  No external tools are needed.
+}
 }
 
 \examples{

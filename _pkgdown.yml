@@ -22,6 +22,7 @@ articles:
     contents:
       - busulfan_pt1_gc_exclusion
       - busulfan_pt2_modelbased_cleaning
+      - busulfan_pt2_ferx
 
 reference:
   - title: Gross data quality
