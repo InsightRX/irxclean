@@ -116,7 +116,7 @@ the observation with the largest |CWRES|, remove it, and re-fit.
 
 Results are cached to an RDS file so subsequent renders skip the fitting.
 
-```{r remove-obs, eval=has_ferx}
+```{r remove-obs, eval=FALSE}
 cache_file <- "busulfan_ferx_results.RDS"
 
 if (file.exists(cache_file)) {
@@ -143,7 +143,7 @@ cat("Flagged observations (ranked by |CWRES|):\n")
 print(results$rem[, c("ID", "TIME", "DV", "CWRES")])
 ```
 
-```{r fallback, eval=!has_ferx, echo=FALSE}
+```{r fallback, echo=FALSE}
 message("ferx package not installed -- loading pre-computed NONMEM results as fallback.")
 results <- readRDS(system.file("extdata", "busulfan_results.RDS",
                                 package = "irxclean"))
