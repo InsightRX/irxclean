@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning • irxclean</title>
+<title>Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning • irxclean</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -62,11 +62,11 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning</h1>
+      <h1>Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/InsightRX/irxclean/blob/main/vignettes/busulfan_pt2_modelbased_cleaning.Rmd" class="external-link"><code>vignettes/busulfan_pt2_modelbased_cleaning.Rmd</code></a></small>
-      <div class="d-none name"><code>busulfan_pt2_modelbased_cleaning.Rmd</code></div>
+      <small class="dont-index">Source: <a href="https://github.com/InsightRX/irxclean/blob/main/vignettes/busulfan_pt2_ferx.Rmd" class="external-link"><code>vignettes/busulfan_pt2_ferx.Rmd</code></a></small>
+      <div class="d-none name"><code>busulfan_pt2_ferx.Rmd</code></div>
     </div>
 
     
@@ -74,66 +74,24 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
+<p>This vignette demonstrates the <strong>ferx engine</strong> for
+model-informed iterative observation cleaning. It mirrors the
+NONMEM-based workflow in Part 2
+(<code>busulfan_pt2_modelbased_cleaning</code>) but uses
+<code>engine = "ferx"</code> instead of NONMEM/PsN, requiring only the R
+package <a href="https://github.com/InsightRX/ferx" class="external-link">ferx</a> – no
+external tools.</p>
 <blockquote>
 <p><strong>Prerequisites:</strong> This vignette continues from
 <strong>Part 1</strong> (<code>busulfan_pt1_gc_exclusion</code>). Run
 Part 1 first and save <code>busulfan_pt1_ready.csv</code> to your
-working directory before proceeding here. Part 1 covers dataset loading,
-concentration visualisation, gross QC with
-<code><a href="../reference/assess_data_quality.html">assess_data_quality()</a></code>, covariate anomaly investigation, and
-structured exclusion criteria.</p>
+working directory before proceeding.</p>
 </blockquote>
-<p>This vignette walks through the <strong>model-informed</strong>
-cleaning stages of an <code>irxclean</code> analysis using the simulated
-busulfan pharmacokinetic dataset. It covers Phase 2 of the full
-workflow: NONMEM-based iterative observation flagging, parameter
-stability assessment, demographic comparison, and HTML report
-generation.</p>
-<div class="section level3">
-<h3 id="intentional-errors-remaining-after-phase-1">Intentional errors remaining after Phase 1<a class="anchor" aria-label="anchor" href="#intentional-errors-remaining-after-phase-1"></a>
-</h3>
-<p>After Part 1 removes the subject with a weight decimal error (ID 18),
-the following errors remain in the dataset for the model to detect:</p>
-<table class="table">
-<colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
-</colgroup>
-<thead><tr class="header">
-<th>FLAG bit</th>
-<th>Error type</th>
-<th>Count</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>2</td>
-<td>Concentration IQR outlier (&gt;3*IQR above Q3 per TAD bin)</td>
-<td>2 observations</td>
-</tr>
-<tr class="even">
-<td>4</td>
-<td>Timing error (+/- 5, 10, 30, or 60 minutes from true time)</td>
-<td>10 observations</td>
-</tr>
-<tr class="odd">
-<td>8</td>
-<td>Concentration magnitude error (multipliers 0.25–1.75x)</td>
-<td>10 observations</td>
-</tr>
-</tbody>
-</table>
 <hr>
-</div>
 </div>
 <div class="section level2">
 <h2 id="load-the-phase-1-dataset">1. Load the Phase 1 dataset<a class="anchor" aria-label="anchor" href="#load-the-phase-1-dataset"></a>
 </h2>
-<p>Load <code>busulfan_pt1_ready.csv</code> saved at the end of Part 1.
-If that file is not present in the working directory (e.g. when
-rendering from the package without running Part 1 first), the raw
-simulated dataset is used as a fallback — note that in this case one
-extra subject (ID 18) with a covariate error remains in the data.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pt1_file</span> <span class="op">&lt;-</span> <span class="st">"busulfan_pt1_ready.csv"</span></span>
 <span></span>
@@ -145,7 +103,8 @@ extra subject (ID 18) with a covariate error remains in the data.</p>
 <span>    <span class="st">"busulfan_pt1_ready.csv not found -- falling back to raw dataset.\n"</span>,</span>
 <span>    <span class="st">"Run busulfan_pt1_gc_exclusion first to generate the cleaned input."</span></span>
 <span>  <span class="op">)</span></span>
-<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">busulfan_sim</span></span>
+<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"busulfan_sim.csv"</span>,</span>
+<span>                               package <span class="op">=</span> <span class="st">"irxclean"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt; busulfan_pt1_ready.csv not found -- falling back to raw dataset.</span></span>
 <span><span class="co">#&gt; Run busulfan_pt1_gc_exclusion first to generate the cleaned input.</span></span>
@@ -158,136 +117,121 @@ extra subject (ID 18) with a covariate error remains in the data.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="iterative-observation-flagging-nonmem-required">2. Iterative observation flagging (NONMEM required)<a class="anchor" aria-label="anchor" href="#iterative-observation-flagging-nonmem-required"></a>
+<h2 id="define-the-ferx-model">2. Define the ferx model<a class="anchor" aria-label="anchor" href="#define-the-ferx-model"></a>
 </h2>
-<p><code><a href="../reference/remove_erroneous_obs.html">remove_erroneous_obs()</a></code> fits NONMEM iteratively, removing
-the observation with the largest |CWRES| at each step. Three input modes
-are supported — see <code><a href="../reference/remove_erroneous_obs.html">?remove_erroneous_obs</a></code> for details. Here
-we demonstrate <strong>Mode 3</strong>: pass the dataset as an in-memory
-R data frame (no separate file copy needed) and point <code>mod</code>
-at the bundled model file path.</p>
-<p>Results are cached to <code>busulfan_results.RDS</code> in the
-working directory so subsequent renders skip the NONMEM run. If neither
-a cache file nor a PsN/NONMEM installation is present, the 5-iteration
-pre-computed result bundled with the package is used as a fallback.</p>
+<p>A <code>.ferx</code> model file describes the structural PK model,
+random effects, and error model. For this busulfan dataset we use a
+one-compartment IV infusion model with IIV on CL and V and proportional
+residual error.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cache_file</span> <span class="op">&lt;-</span> <span class="st">"busulfan_results.RDS"</span></span>
+<code class="sourceCode R"><span><span class="va">model_text</span> <span class="op">&lt;-</span> <span class="st">'</span></span>
+<span><span class="st">[parameters]</span></span>
+<span><span class="st">  theta TVCL(4.0, 0.1, 100.0)  ; Clearance</span></span>
+<span><span class="st">  theta TVV(15.0, 1.0, 500.0)  ; Volume</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  omega ETA_CL ~ 0.09  ; IIV CL</span></span>
+<span><span class="st">  omega ETA_V  ~ 0.04  ; IIV V</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  sigma PROP_ERR ~ 0.1 (sd)  ; Proportional error</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">[individual_parameters]</span></span>
+<span><span class="st">  CL = TVCL * exp(ETA_CL)</span></span>
+<span><span class="st">  V  = TVV  * exp(ETA_V)</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">[structural_model]</span></span>
+<span><span class="st">  ode(states=[central])</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">[odes]</span></span>
+<span><span class="st">  d/dt(central) = -(CL/V) * central</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">[scaling]</span></span>
+<span><span class="st">  y = central / V</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">[error_model]</span></span>
+<span><span class="st">  DV ~ proportional(PROP_ERR)</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">[fit_options]</span></span>
+<span><span class="st">  method  = focei</span></span>
+<span><span class="st">  maxiter = 300</span></span>
+<span><span class="st">'</span></span>
+<span></span>
+<span><span class="va">model_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"busulfan_1cpt.ferx"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="va">model_text</span>, <span class="va">model_path</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Model written to:"</span>, <span class="va">model_path</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Model written to: /tmp/RtmpmkSLyD/busulfan_1cpt.ferx</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="iterative-observation-flagging-with-ferx">3. Iterative observation flagging with ferx<a class="anchor" aria-label="anchor" href="#iterative-observation-flagging-with-ferx"></a>
+</h2>
+<p><code><a href="../reference/remove_erroneous_obs.html">remove_erroneous_obs()</a></code> with <code>engine = "ferx"</code>
+calls <code><a href="https://ferx-nlme.github.io/reference/ferx_fit.html" class="external-link">ferx::ferx_fit()</a></code> at each iteration instead of NONMEM.
+The same algorithm applies: identify the observation with the largest
+|CWRES|, remove it, and re-fit.</p>
+<p>Results are cached to an RDS file so subsequent renders skip the
+fitting.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cache_file</span> <span class="op">&lt;-</span> <span class="st">"busulfan_ferx_results.RDS"</span></span>
 <span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">cache_file</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">cache_file</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Loaded cached results from "</span>, <span class="va">cache_file</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"execute"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co"># Mode 3: pass data frame directly; model given as a file path</span></span>
+<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
 <span>  <span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/remove_erroneous_obs.html">remove_erroneous_obs</a></span><span class="op">(</span></span>
-<span>    dat    <span class="op">=</span> <span class="va">dat</span>,   <span class="co"># Phase 1 cleaned data frame</span></span>
-<span>    mod    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"pk_busulfan_ucsf_2025.mod"</span>,</span>
-<span>                         package <span class="op">=</span> <span class="st">"irxclean"</span><span class="op">)</span>,</span>
-<span>    run_id <span class="op">=</span> <span class="st">"busulfan_removal"</span>,</span>
-<span>    n      <span class="op">=</span> <span class="fl">20</span></span>
+<span>    dat             <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>    mod             <span class="op">=</span> <span class="va">model_path</span>,</span>
+<span>    run_id          <span class="op">=</span> <span class="st">"bu_ferx"</span>,</span>
+<span>    n               <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    verbose         <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    save_results    <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    stability_check <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    engine          <span class="op">=</span> <span class="st">"ferx"</span>,</span>
+<span>    method          <span class="op">=</span> <span class="st">"focei"</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">results</span>, <span class="va">cache_file</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Results saved to "</span>, <span class="va">cache_file</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"NONMEM/PsN not found and no cache -- loading package testdata."</span><span class="op">)</span></span>
-<span>  <span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"busulfan_results.RDS"</span>,</span>
-<span>                                 package <span class="op">=</span> <span class="st">"irxclean"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; NONMEM/PsN not found and no cache -- loading package testdata.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Iterations completed:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">rmse</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Iterations completed: 20</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Flagged observations (ranked by |CWRES|):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Flagged observations (ranked by |CWRES|):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">rem</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"TIME"</span>, <span class="st">"DV"</span>, <span class="st">"CWRES"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    ID  TIME      DV   CWRES</span></span>
-<span><span class="co">#&gt; 1  12  5.18  534.31 -8.1999</span></span>
-<span><span class="co">#&gt; 2  39 51.45 4853.00  7.4235</span></span>
-<span><span class="co">#&gt; 3  39  6.30 3925.00  6.3175</span></span>
-<span><span class="co">#&gt; 4  13 28.35 1532.10 -5.0007</span></span>
-<span><span class="co">#&gt; 5  18 10.40  104.09 -4.3844</span></span>
-<span><span class="co">#&gt; 6  39 52.67 2968.50  4.0617</span></span>
-<span><span class="co">#&gt; 7  73 29.73 2311.90  4.0013</span></span>
-<span><span class="co">#&gt; 8  54 27.31 7712.70  3.9900</span></span>
-<span><span class="co">#&gt; 9  90 60.65  700.97  3.3856</span></span>
-<span><span class="co">#&gt; 10 79 54.71 1790.30  3.4172</span></span>
-<span><span class="co">#&gt; 11 39  4.55 4493.50  3.1948</span></span>
-<span><span class="co">#&gt; 12 73 56.59 1257.80  3.1732</span></span>
-<span><span class="co">#&gt; 13 81  3.17 5075.90  3.3176</span></span>
-<span><span class="co">#&gt; 14  3  7.01 1641.80  3.1707</span></span>
-<span><span class="co">#&gt; 15 52  7.37 1222.60  3.1883</span></span>
-<span><span class="co">#&gt; 16 28 52.58 2957.40  2.9034</span></span>
-<span><span class="co">#&gt; 17 63 51.66 3498.40  2.9089</span></span>
-<span><span class="co">#&gt; 18 72 51.67 3474.70  2.7608</span></span>
-<span><span class="co">#&gt; 19 16 56.82 1220.30  2.7564</span></span>
-<span><span class="co">#&gt; 20  8 59.63  644.55  2.7565</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">rem</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ID"</span>, <span class="st">"TIME"</span>, <span class="st">"DV"</span>, <span class="st">"CWRES"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; ferx package not installed -- loading pre-computed NONMEM results as fallback.</span></span></code></pre>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="removal-metrics">3. Removal metrics<a class="anchor" aria-label="anchor" href="#removal-metrics"></a>
+<h2 id="removal-metrics">4. Removal metrics<a class="anchor" aria-label="anchor" href="#removal-metrics"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>The same plotting functions work identically regardless of
+engine.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"pOFV"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="busulfan_pt2_modelbased_cleaning_files/figure-html/metrics-pofv-1.png" class="r-plt" alt="Change in pseudo-OFV per iteration. A sharp early drop followed by a plateau suggests meaningful early removals with diminishing returns." width="768"><p class="caption">
-Change in pseudo-OFV per iteration. A sharp early drop followed by a
-plateau suggests meaningful early removals with diminishing returns.
+<img src="busulfan_pt2_ferx_files/figure-html/metrics-pofv-1.png" class="r-plt" alt="Change in pseudo-OFV per iteration." width="768"><p class="caption">
+Change in pseudo-OFV per iteration.
 </p>
 </div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"thetas"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="busulfan_pt2_modelbased_cleaning_files/figure-html/metrics-thetas-1.png" class="r-plt" alt="THETA estimates normalised to final value. Free axes per panel; phantom reference lines at 0.75 and 1.5 ensure consistent scale even when individual parameters are stable." width="768"><p class="caption">
-THETA estimates normalised to final value. Free axes per panel; phantom
-reference lines at 0.75 and 1.5 ensure consistent scale even when
-individual parameters are stable.
+<img src="busulfan_pt2_ferx_files/figure-html/metrics-thetas-1.png" class="r-plt" alt="THETA estimates normalised to final value." width="768"><p class="caption">
+THETA estimates normalised to final value.
 </p>
 </div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"rmse"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="busulfan_pt2_modelbased_cleaning_files/figure-html/metrics-rmse-1.png" class="r-plt" alt="nRMSE across iterations." width="768"><p class="caption">
-nRMSE across iterations.
-</p>
-</div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="error-parameter-trajectories">4. Error parameter trajectories<a class="anchor" aria-label="anchor" href="#error-parameter-trajectories"></a>
-</h2>
-<p>Proportional and additive residual error parameters are auto-detected
-from the <code>param_labels</code> element of the results (parsed from
-<code>$THETA</code> comments in the model file). For this model,
-<code>THETA7</code> is proportional error and <code>THETA8</code> is
-additive. The detection source is printed when
-<code>quiet = FALSE</code> in <code><a href="../reference/generate_report.html">generate_report()</a></code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">detected</span> <span class="op">&lt;-</span> <span class="fu">irxclean</span><span class="fu">:::</span><span class="fu">.find_error_params</span><span class="op">(</span></span>
-<span>  <span class="va">results</span><span class="op">$</span><span class="va">param_labels</span>, <span class="va">results</span><span class="op">$</span><span class="va">par</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; irxclean: Auto-detected error parameters (source: THETA label):</span></span>
-<span><span class="co">#&gt;   Proportional : "THETA7" (label: "PROP error")</span></span>
-<span><span class="co">#&gt;   Additive     : "THETA8" (label: "ADD error")</span></span>
-<span><span class="co">#&gt;   Override via prop_error_param / add_error_param (e.g. "THETA(7)" or "SIGMA(1)").</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">irxclean</span><span class="fu">:::</span><span class="fu">.plot_param_trajectory</span><span class="op">(</span></span>
-<span>  <span class="va">results</span>,</span>
-<span>  <span class="va">detected</span><span class="op">$</span><span class="va">prop_col</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Proportional residual error (THETA7) across iterations"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"omegas"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="busulfan_pt2_modelbased_cleaning_files/figure-html/traj-prop-1.png" class="r-plt" alt="Proportional residual error (THETA7) stability across iterations." width="768"><p class="caption">
-Proportional residual error (THETA7) stability across iterations.
+<img src="busulfan_pt2_ferx_files/figure-html/metrics-omegas-1.png" class="r-plt" alt="OMEGA estimates normalised to final value." width="768"><p class="caption">
+OMEGA estimates normalised to final value.
 </p>
 </div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">irxclean</span><span class="fu">:::</span><span class="fu">.plot_param_trajectory</span><span class="op">(</span></span>
-<span>  <span class="va">results</span>,</span>
-<span>  <span class="va">detected</span><span class="op">$</span><span class="va">add_col</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Additive residual error (THETA8) across iterations"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"sigmas"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; All SIGMA parameters are fixed; no SIGMA plot generated.</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_removal_metrics.html">plot_removal_metrics</a></span><span class="op">(</span><span class="va">results</span>, metric <span class="op">=</span> <span class="st">"rmse"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="busulfan_pt2_modelbased_cleaning_files/figure-html/traj-add-1.png" class="r-plt" alt="Additive residual error (THETA8) stability across iterations." width="768"><p class="caption">
-Additive residual error (THETA8) stability across iterations.
+<img src="busulfan_pt2_ferx_files/figure-html/metrics-rmse-1.png" class="r-plt" alt="nRMSE across iterations." width="768"><p class="caption">
+nRMSE across iterations.
 </p>
 </div>
 <hr>
@@ -295,7 +239,7 @@ Additive residual error (THETA8) stability across iterations.
 <div class="section level2">
 <h2 id="model-stability">5. Model stability<a class="anchor" aria-label="anchor" href="#model-stability"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stability</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_model_stability.html">check_model_stability</a></span><span class="op">(</span><span class="va">results</span>, threshold_pct <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; irxclean :: Model stability check (threshold: 20%)</span></span>
@@ -333,7 +277,7 @@ Additive residual error (THETA8) stability across iterations.
 <span><span class="co">#&gt;           IIV V2   28.55           9      10.694  3.16e+01 unstable</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; nRMSE trend: decreasing</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">flag_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stability_flag_table.html">stability_flag_table</a></span><span class="op">(</span><span class="va">stability</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">flag_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">flag_tbl</span>, digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="kw">else</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"All parameters stable.\n"</span><span class="op">)</span></span></code></pre></div>
@@ -490,7 +434,7 @@ Additive residual error (THETA8) stability across iterations.
 <div class="section level2">
 <h2 id="demographic-comparison">6. Demographic comparison<a class="anchor" aria-label="anchor" href="#demographic-comparison"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_demographic_comparison.html">plot_demographic_comparison</a></span><span class="op">(</span></span>
 <span>  data             <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  results          <span class="op">=</span> <span class="va">results</span>,</span>
@@ -511,47 +455,37 @@ Additive residual error (THETA8) stability across iterations.
 <div class="section level2">
 <h2 id="apply-final-exclusions">7. Apply final exclusions<a class="anchor" aria-label="anchor" href="#apply-final-exclusions"></a>
 </h2>
-<p>After reviewing the ranked flagged observations, apply user-approved
+<p>After reviewing the flagged observations, apply user-approved
 exclusions:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cleaned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/remove_observations_from_data.html">remove_observations_from_data</a></span><span class="op">(</span></span>
 <span>  data    <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  results <span class="op">=</span> <span class="va">results</span>,</span>
-<span>  n       <span class="op">=</span> <span class="fl">10</span>  <span class="co"># remove top 10ranked observations</span></span>
+<span>  n       <span class="op">=</span> <span class="fl">10</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">cleaned</span>, <span class="st">"busulfan_cleaned.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">cleaned</span>, <span class="st">"busulfan_ferx_cleaned.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Cleaned dataset:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cleaned</span><span class="op">)</span>, <span class="st">"rows\n"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="generate-html-report">8. Generate HTML report<a class="anchor" aria-label="anchor" href="#generate-html-report"></a>
 </h2>
-<p><code><a href="../reference/generate_report.html">generate_report()</a></code> compiles all findings into a
-structured, self-contained HTML report. Proportional and additive error
-parameters are auto-detected from <code>results$param_labels</code>;
-override explicitly if needed using either the column name
-(<code>"THETA7"</code>) or NONMEM index notation
-(<code>"THETA(7)"</code>).</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/generate_report.html">generate_report</a></span><span class="op">(</span></span>
 <span>  results              <span class="op">=</span> <span class="va">results</span>,</span>
 <span>  data                 <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  <span class="co"># Auto-detected; shown here for illustration -- override if needed:</span></span>
-<span>  prop_error_param     <span class="op">=</span> <span class="st">"THETA(7)"</span>,</span>
-<span>  add_error_param      <span class="op">=</span> <span class="st">"THETA(8)"</span>,</span>
 <span>  continuous_cov_cols  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AGE"</span>, <span class="st">"WT"</span>, <span class="st">"HT"</span><span class="op">)</span>,</span>
 <span>  categorical_cov_cols <span class="op">=</span> <span class="st">"SEX"</span>,</span>
-<span>  title                <span class="op">=</span> <span class="st">"Busulfan PK -- Model-Informed Cleaning Report"</span>,</span>
-<span>  output_file          <span class="op">=</span> <span class="st">"busulfan_irxclean_report.html"</span>,</span>
-<span>  quiet                <span class="op">=</span> <span class="cn">FALSE</span>   <span class="co"># prints auto-detection summary</span></span>
+<span>  title                <span class="op">=</span> <span class="st">"Busulfan PK -- ferx Model-Informed Cleaning Report"</span>,</span>
+<span>  output_file          <span class="op">=</span> <span class="st">"busulfan_ferx_report.html"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -578,19 +512,19 @@ override explicitly if needed using either the column name
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     dplyr_1.2.1       </span></span>
-<span><span class="co">#&gt;  [5] compiler_4.6.1     tidyselect_1.2.1   stringr_1.6.0      tidyr_1.3.2       </span></span>
-<span><span class="co">#&gt;  [9] jquerylib_0.1.4    splines_4.6.1      systemfonts_1.3.2  scales_1.4.0      </span></span>
-<span><span class="co">#&gt; [13] textshaping_1.0.5  yaml_2.3.12        fastmap_1.2.0      lattice_0.22-9    </span></span>
-<span><span class="co">#&gt; [17] ggplot2_4.0.3      R6_2.6.1           labeling_0.4.3     vpc_1.2.4         </span></span>
-<span><span class="co">#&gt; [21] generics_0.1.4     patchwork_1.3.2    knitr_1.51         tibble_3.3.1      </span></span>
-<span><span class="co">#&gt; [25] desc_1.4.3         bslib_0.11.0       pillar_1.11.1      RColorBrewer_1.1-3</span></span>
-<span><span class="co">#&gt; [29] rlang_1.2.0        stringi_1.8.7      cachem_1.1.0       xfun_0.59         </span></span>
-<span><span class="co">#&gt; [33] fs_2.1.0           sass_0.4.10        S7_0.2.2           otel_0.2.0        </span></span>
-<span><span class="co">#&gt; [37] cli_3.6.6          mgcv_1.9-4         withr_3.0.3        pkgdown_2.2.0     </span></span>
-<span><span class="co">#&gt; [41] magrittr_2.0.5     digest_0.6.39      grid_4.6.1         nlme_3.1-169      </span></span>
-<span><span class="co">#&gt; [45] lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1        </span></span>
-<span><span class="co">#&gt; [49] farver_2.1.2       ragg_1.5.2         purrr_1.2.2        rmarkdown_2.31    </span></span>
-<span><span class="co">#&gt; [53] tools_4.6.1        pkgconfig_2.0.3    htmltools_0.5.9</span></span></code></pre></div>
+<span><span class="co">#&gt;  [5] compiler_4.6.1     ferx_0.1.6         tidyselect_1.2.1   stringr_1.6.0     </span></span>
+<span><span class="co">#&gt;  [9] tidyr_1.3.2        jquerylib_0.1.4    splines_4.6.1      systemfonts_1.3.2 </span></span>
+<span><span class="co">#&gt; [13] scales_1.4.0       textshaping_1.0.5  yaml_2.3.12        fastmap_1.2.0     </span></span>
+<span><span class="co">#&gt; [17] lattice_0.22-9     ggplot2_4.0.3      R6_2.6.1           labeling_0.4.3    </span></span>
+<span><span class="co">#&gt; [21] vpc_1.2.4          generics_0.1.4     patchwork_1.3.2    knitr_1.51        </span></span>
+<span><span class="co">#&gt; [25] tibble_3.3.1       desc_1.4.3         bslib_0.11.0       pillar_1.11.1     </span></span>
+<span><span class="co">#&gt; [29] RColorBrewer_1.1-3 rlang_1.2.0        stringi_1.8.7      cachem_1.1.0      </span></span>
+<span><span class="co">#&gt; [33] xfun_0.59          fs_2.1.0           sass_0.4.10        S7_0.2.2          </span></span>
+<span><span class="co">#&gt; [37] otel_0.2.0         cli_3.6.6          mgcv_1.9-4         withr_3.0.3       </span></span>
+<span><span class="co">#&gt; [41] pkgdown_2.2.0      magrittr_2.0.5     digest_0.6.39      grid_4.6.1        </span></span>
+<span><span class="co">#&gt; [45] nlme_3.1-169       lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5    </span></span>
+<span><span class="co">#&gt; [49] glue_1.8.1         farver_2.1.2       ragg_1.5.2         purrr_1.2.2       </span></span>
+<span><span class="co">#&gt; [53] rmarkdown_2.31     tools_4.6.1        pkgconfig_2.0.3    htmltools_0.5.9</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

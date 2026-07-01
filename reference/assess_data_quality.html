@@ -23,6 +23,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Example</h6></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt1_gc_exclusion.html">Simulated Busulfan PK: Part 1 — Gross QC and Exclusion Criteria</a></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt2_modelbased_cleaning.html">Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning</a></li>
+    <li><a class="dropdown-item" href="../articles/busulfan_pt2_ferx.html">Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -53,10 +54,10 @@
 <span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ID <span class="op">=</span> <span class="st">"ID"</span>, TIME <span class="op">=</span> <span class="st">"TIME"</span>, DV <span class="op">=</span> <span class="st">"DV"</span>, EVID <span class="op">=</span> <span class="st">"EVID"</span>, MDV <span class="op">=</span> <span class="st">"MDV"</span><span class="op">)</span>,</span>
 <span>  covariate_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  categorical_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  iqr_multiplier <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  iqr_multiplier <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  tad_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tad_bin_width <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  conc_increase_threshold <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  conc_increase_threshold <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  conc_floor <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -88,7 +89,7 @@ names.  Currently used only for completeness in the missing-data summary.</p></d
 <dt id="arg-iqr-multiplier">iqr_multiplier<a class="anchor" aria-label="anchor" href="#arg-iqr-multiplier"></a></dt>
 <dd><p>Numeric. IQR multiplier for outlier bounds, applied to
 both covariate outlier detection and concentration bin outlier detection.
-Default `3`.</p></dd>
+Default `5`.</p></dd>
 
 
 <dt id="arg-tad-col">tad_col<a class="anchor" aria-label="anchor" href="#arg-tad-col"></a></dt>
@@ -103,13 +104,13 @@ if no dose records exist, falls back to <code>TIME</code>.</p></dd>
 <dd><p>Numeric. Width of TAD bins used when checking for
 concentration outliers within each TAD window.  <code>NULL</code> (default)
 auto-selects a round value from the TAD range.  Bins with fewer than
-4 observations are skipped.</p></dd>
+8 observations are skipped.</p></dd>
 
 
 <dt id="arg-conc-increase-threshold">conc_increase_threshold<a class="anchor" aria-label="anchor" href="#arg-conc-increase-threshold"></a></dt>
 <dd><p>Numeric. Minimum fold-increase in
 concentration (without intervening dose) to flag as suspicious.
-Default `1.5`.</p></dd>
+Default `2.0`.</p></dd>
 
 
 <dt id="arg-conc-floor">conc_floor<a class="anchor" aria-label="anchor" href="#arg-conc-floor"></a></dt>

@@ -11,10 +11,10 @@ assess_data_quality(
   columns = list(ID = "ID", TIME = "TIME", DV = "DV", EVID = "EVID", MDV = "MDV"),
   covariate_cols = NULL,
   categorical_cols = NULL,
-  iqr_multiplier = 3,
+  iqr_multiplier = 5,
   tad_col = NULL,
   tad_bin_width = NULL,
-  conc_increase_threshold = 1.5,
+  conc_increase_threshold = 2,
   conc_floor = 0,
   verbose = TRUE
 )
@@ -45,7 +45,7 @@ assess_data_quality(
 
   Numeric. IQR multiplier for outlier bounds, applied to both covariate
   outlier detection and concentration bin outlier detection. Default
-  \`3\`.
+  \`5\`.
 
 - tad_col:
 
@@ -59,13 +59,13 @@ assess_data_quality(
 
   Numeric. Width of TAD bins used when checking for concentration
   outliers within each TAD window. `NULL` (default) auto-selects a round
-  value from the TAD range. Bins with fewer than 4 observations are
+  value from the TAD range. Bins with fewer than 8 observations are
   skipped.
 
 - conc_increase_threshold:
 
   Numeric. Minimum fold-increase in concentration (without intervening
-  dose) to flag as suspicious. Default \`1.5\`.
+  dose) to flag as suspicious. Default \`2.0\`.
 
 - conc_floor:
 

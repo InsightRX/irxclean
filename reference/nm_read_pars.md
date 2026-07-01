@@ -1,6 +1,6 @@
 # Read population parameter estimates from a NONMEM \`.ext\` file
 
-Returns the final estimates (iteration \`-1000000000\`).
+Returns the final estimates (iteration `-1000000000`).
 
 ## Usage
 

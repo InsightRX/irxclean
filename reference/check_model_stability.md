@@ -9,7 +9,12 @@ function classifies each parameter as:
 ## Usage
 
 ``` r
-check_model_stability(results, threshold_pct = 20, verbose = TRUE)
+check_model_stability(
+  results,
+  threshold_pct = 20,
+  late_window_fraction = 1/3,
+  verbose = TRUE
+)
 ```
 
 ## Arguments
@@ -26,6 +31,12 @@ check_model_stability(results, threshold_pct = 20, verbose = TRUE)
   Numeric. RSE % threshold above which a parameter is considered to have
   high variability. Also used (as `threshold_pct / 4`) to assess
   late-iteration stability. Default 20 (i.e. 20%).
+
+- late_window_fraction:
+
+  Numeric. Fraction of iterations (from the end) used to assess
+  late-stage CV stability. Default `1/3` (final third, minimum 2
+  iterations).
 
 - verbose:
 

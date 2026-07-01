@@ -21,3 +21,7 @@ nm_write_model(model = NULL, modelfile = NULL, overwrite = FALSE)
 - overwrite:
 
   Overwrite an existing file? Default \`FALSE\`.
+
+## Value
+
+Invisibly returns `modelfile` (the output file path).

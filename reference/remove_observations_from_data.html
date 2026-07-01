@@ -29,6 +29,7 @@ dataset suitable for final analysis.  The top `n` flagged observations
     <li><h6 class="dropdown-header" data-toc-skip>Example</h6></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt1_gc_exclusion.html">Simulated Busulfan PK: Part 1 — Gross QC and Exclusion Criteria</a></li>
     <li><a class="dropdown-item" href="../articles/busulfan_pt2_modelbased_cleaning.html">Simulated Busulfan PK: Part 2 — Model-Informed Iterative Cleaning</a></li>
+    <li><a class="dropdown-item" href="../articles/busulfan_pt2_ferx.html">Simulated Busulfan PK: Part 2 (ferx) -- Model-Informed Iterative Cleaning</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -100,8 +101,10 @@ Default: `list(ID = "ID", TIME = "TIME", DV = "DV")`.</p></dd>
 A flagged observation is not necessarily erroneous; it may represent a
 genuine patient population subgroup or an unusual but valid measurement.
 Final exclusion decisions rest with the analyst.</p>
-<p>Matching is performed on rounded (`3` decimal places) `ID`, `TIME`, and
-`DV` values.  A warning is raised if the number of rows removed does not
+<p>Matching is performed on a composite key of rounded (`3` decimal places)
+`ID`, `TIME`, and `DV` values concatenated together, so that each flagged
+observation is identified as a unit rather than by independent column
+membership.  A warning is raised if the number of rows removed does not
 equal `n`.</p>
     </div>
 

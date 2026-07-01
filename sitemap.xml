@@ -3,6 +3,7 @@
 <url><loc>https://insightrx.github.io/irxclean/LICENSE-text.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/LICENSE.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/articles/busulfan_pt1_gc_exclusion.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/articles/busulfan_pt2_ferx.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/articles/busulfan_pt2_modelbased_cleaning.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/articles/index.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/articles/irxclean.html</loc></url>
@@ -14,6 +15,10 @@
 <url><loc>https://insightrx.github.io/irxclean/reference/busulfan_sim.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/calculate_pofv_change.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/check_model_stability.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/reference/ferx_parse_param_labels.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/reference/ferx_read_pars.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/reference/ferx_run_iteration.html</loc></url>
+<url><loc>https://insightrx.github.io/irxclean/reference/ferx_write_data.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/generate_report.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/index.html</loc></url>
 <url><loc>https://insightrx.github.io/irxclean/reference/irxclean-package.html</loc></url>

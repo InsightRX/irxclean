@@ -1,13 +1,14 @@
 # Iteratively detect potentially erroneous pharmacokinetic observations
 
-Performs iterative NONMEM-based detection of potentially erroneous
-observations in a pharmacokinetic dataset. The ranked list of flagged
-observations is intended for user review before any exclusions are
-applied to the final analysis dataset (see
+Performs iterative model-based detection of potentially erroneous
+observations in a pharmacokinetic dataset. Supports two estimation
+engines: NONMEM (via PsN, the default) and ferx. The ranked list of
+flagged observations is intended for user review before any exclusions
+are applied to the final analysis dataset (see
 [`remove_observations_from_data()`](https://insightrx.github.io/irxclean/reference/remove_observations_from_data.md)).
 At each iteration the algorithm:
 
-1.  Runs NONMEM (via PsN \`execute\`) on the current dataset.
+1.  Fits the model on the current dataset.
 
 2.  Identifies the observation with the highest absolute CWRES.
 
@@ -27,7 +28,9 @@ remove_erroneous_obs(
   verbose = TRUE,
   save_results = TRUE,
   save_temp_dir = FALSE,
-  stability_check = TRUE
+  stability_check = TRUE,
+  engine = c("nonmem", "ferx"),
+  ...
 )
 ```
 
@@ -41,10 +44,10 @@ remove_erroneous_obs(
 
 - mod:
 
-  File path to the NONMEM \`.mod\` control stream (with or without the
-  \`.mod\` extension, relative or absolute), \*\*or\*\* a `nm_model`
-  list returned by
+  File path to the model file. For `engine = "nonmem"`: a \`.mod\`
+  control stream (extension optional), or a `nm_model` list from
   [`nm_read_model()`](https://insightrx.github.io/irxclean/reference/nm_read_model.md).
+  For `engine = "ferx"`: a \`.ferx\` model file path.
 
 - run_id:
 
@@ -77,6 +80,17 @@ remove_erroneous_obs(
 
   Logical. Append model stability metrics to the returned results?
   Default \`TRUE\`. See \[check_model_stability()\].
+
+- engine:
+
+  Character. Estimation engine to use: `"nonmem"` (default, requires
+  PsN) or `"ferx"` (requires the ferx package).
+
+- ...:
+
+  Additional arguments passed to
+  [`ferx::ferx_fit()`](https://ferx-nlme.github.io/reference/ferx_fit.html)
+  when `engine = "ferx"`. Ignored when `engine = "nonmem"`.
 
 ## Value
 
@@ -166,9 +180,13 @@ there automatically.
 The three modes can be mixed: you may supply an in-memory data frame for
 `dat` while pointing `mod` at a file path, or vice versa.
 
-## PsN requirement
+## Engine requirements
 
-\`execute\` and \`sumo\` must be available on the system \`PATH\`.
+- **NONMEM** (`engine = "nonmem"`): PsN commands `execute` and `sumo`
+  must be available on the system `PATH`.
+
+- **ferx** (`engine = "ferx"`): the ferx R package must be installed. No
+  external tools are needed.
 
 ## See also
 

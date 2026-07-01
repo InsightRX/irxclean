@@ -16,10 +16,10 @@ apply_exclusion_criteria(
   check_no_tdm = TRUE,
   check_during_infusion = TRUE,
   check_conc_increase = TRUE,
-  conc_increase_threshold = 1.5,
+  conc_increase_threshold = 2,
   conc_floor = 0,
   check_dose_outlier = TRUE,
-  dose_iqr_multiplier = 3,
+  dose_iqr_multiplier = 5,
   custom_criteria = NULL,
   verbose = TRUE
 )
@@ -61,7 +61,7 @@ apply_exclusion_criteria(
 - conc_increase_threshold:
 
   Numeric. Fold-increase threshold for flagging concentration
-  elevations. Default `1.5`.
+  elevations. Default `2.0`.
 
 - conc_floor:
 
@@ -75,7 +75,7 @@ apply_exclusion_criteria(
 
 - dose_iqr_multiplier:
 
-  Numeric. IQR multiplier for dose-outlier detection. Default `3`.
+  Numeric. IQR multiplier for dose-outlier detection. Default `5`.
 
 - custom_criteria:
 
