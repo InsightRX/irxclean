@@ -14,6 +14,10 @@ assess_data_quality(
   tad_bin_width = NULL,
   conc_increase_threshold = 2,
   conc_floor = 0,
+  covariate_pairs = NULL,
+  pair_method = "loess",
+  loess_span = 0.75,
+  min_subjects_pair = 15L,
   verbose = TRUE
 )
 }
@@ -27,7 +31,9 @@ assess_data_quality(
 to screen for outliers.  `NULL` skips this check.}
 
 \item{categorical_cols}{Character vector of categorical covariate column
-names.  Currently used only for completeness in the missing-data summary.}
+names.  Used in the missing-data summary and to identify which columns
+in \code{covariate_pairs} are categorical (triggering within-group IQR
+checks instead of loess).}
 
 \item{iqr_multiplier}{Numeric. IQR multiplier for outlier bounds, applied to
 both covariate outlier detection and concentration bin outlier detection.
@@ -53,6 +59,29 @@ when evaluating fold-increases.  Pairs where the earlier DV is at or
 below this value are skipped (ratio is undefined / noise-dominated near
 the assay LOQ).  Set to your assay LLOQ.  Default `0` (no floor).}
 
+\item{covariate_pairs}{A list of length-2 character vectors specifying
+bivariate covariate pairs to check for outliers, e.g.
+\code{list(c("WT", "AGE"), c("HT", "AGE"))}.  For each pair, a robust
+loess smooth of Y ~ X is fitted across subjects, and those whose
+residual exceeds IQR-based bounds are flagged.  Pairs that mix a
+continuous and a categorical column (as declared in
+\code{categorical_cols}) use within-group IQR flagging instead.
+The string \code{"all"} auto-generates all pairwise combinations
+from \code{covariate_cols} and \code{categorical_cols} (excluding
+categorical-by-categorical; requires at least 2 columns total with
+at least one continuous).  \code{NULL} (default) skips this check.}
+
+\item{pair_method}{Character.  Method for bivariate covariate checks.
+Currently only \code{"loess"} (default) is implemented.
+\code{"reference"} is reserved for future CDC/WHO growth-chart checks
+and raises an informative error.}
+
+\item{loess_span}{Numeric.  Span parameter for the loess smoother used in
+bivariate covariate checks.  Default \code{0.75}.}
+
+\item{min_subjects_pair}{Integer.  Minimum number of subjects with
+complete data for a covariate pair to be evaluated.  Default \code{15}.}
+
 \item{verbose}{Logical. Print a summary of findings?  Default `TRUE`.}
 }
 \value{
@@ -72,6 +101,13 @@ An object of class \code{irxclean_quality} (a named list) with
     elevations without an intervening dose, or \code{NULL} if none detected.}
   \item{missing_summary}{Data frame with columns \code{column},
     \code{n_missing}, and \code{pct_missing}.}
+  \item{covariate_pair_outliers}{Data frame of subjects flagged by
+    bivariate covariate checks, or \code{NULL} if none detected / not
+    requested.  Columns: ID, Y_COL, X_COL, Y_VALUE, X_VALUE, PREDICTED,
+    RESIDUAL, LOWER_BOUND, UPPER_BOUND.}
+  \item{covariate_pair_scatter}{Data frame of per-subject loess-fitted
+    values for each pair, used for scatter plots.  \code{NULL} when no
+    pairs are specified.}
   \item{n_subjects}{Number of unique subjects.}
   \item{n_observations}{Number of observation rows (EVID==0, MDV==0).}
 }
