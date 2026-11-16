@@ -56,7 +56,8 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom stringr str_detect str_replace str_replace_all str_split str_c
 #' @importFrom rlang .data
-#' @importFrom stats lm median quantile wilcox.test chisq.test binom.test sd IQR setNames
+#' @importFrom stats lm loess median quantile wilcox.test chisq.test binom.test
+#'   sd IQR setNames complete.cases predict as.formula
 #' @importFrom utils head read.csv read.table write.csv write.table tail
 #' @importFrom vpc read_table_nm
 #' @importFrom methods is

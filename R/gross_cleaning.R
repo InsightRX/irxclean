@@ -27,7 +27,9 @@
 #' @param covariate_cols Character vector of continuous covariate column names
 #'   to screen for outliers.  `NULL` skips this check.
 #' @param categorical_cols Character vector of categorical covariate column
-#'   names.  Currently used only for completeness in the missing-data summary.
+#'   names.  Used in the missing-data summary and to identify which columns
+#'   in \code{covariate_pairs} are categorical (triggering within-group IQR
+#'   checks instead of loess).
 #' @param iqr_multiplier Numeric. IQR multiplier for outlier bounds, applied to
 #'   both covariate outlier detection and concentration bin outlier detection.
 #'   Default `5`.
@@ -47,6 +49,25 @@
 #'   when evaluating fold-increases.  Pairs where the earlier DV is at or
 #'   below this value are skipped (ratio is undefined / noise-dominated near
 #'   the assay LOQ).  Set to your assay LLOQ.  Default `0` (no floor).
+#' @param covariate_pairs A list of length-2 character vectors specifying
+#'   bivariate covariate pairs to check for outliers, e.g.
+#'   \code{list(c("WT", "AGE"), c("HT", "AGE"))}.  For each pair, a robust
+#'   loess smooth of Y ~ X is fitted across subjects, and those whose
+#'   residual exceeds IQR-based bounds are flagged.  Pairs that mix a
+#'   continuous and a categorical column (as declared in
+#'   \code{categorical_cols}) use within-group IQR flagging instead.
+#'   The string \code{"all"} auto-generates all pairwise combinations
+#'   from \code{covariate_cols} and \code{categorical_cols} (excluding
+#'   categorical-by-categorical; requires at least 2 columns total with
+#'   at least one continuous).  \code{NULL} (default) skips this check.
+#' @param pair_method Character.  Method for bivariate covariate checks.
+#'   Currently only \code{"loess"} (default) is implemented.
+#'   \code{"reference"} is reserved for future CDC/WHO growth-chart checks
+#'   and raises an informative error.
+#' @param loess_span Numeric.  Span parameter for the loess smoother used in
+#'   bivariate covariate checks.  Default \code{0.75}.
+#' @param min_subjects_pair Integer.  Minimum number of subjects with
+#'   complete data for a covariate pair to be evaluated.  Default \code{15}.
 #' @param verbose Logical. Print a summary of findings?  Default `TRUE`.
 #'
 #' @return An object of class \code{irxclean_quality} (a named list) with
@@ -65,6 +86,13 @@
 #'     elevations without an intervening dose, or \code{NULL} if none detected.}
 #'   \item{missing_summary}{Data frame with columns \code{column},
 #'     \code{n_missing}, and \code{pct_missing}.}
+#'   \item{covariate_pair_outliers}{Data frame of subjects flagged by
+#'     bivariate covariate checks, or \code{NULL} if none detected / not
+#'     requested.  Columns: ID, Y_COL, X_COL, Y_VALUE, X_VALUE, PREDICTED,
+#'     RESIDUAL, LOWER_BOUND, UPPER_BOUND.}
+#'   \item{covariate_pair_scatter}{Data frame of per-subject loess-fitted
+#'     values for each pair, used for scatter plots.  \code{NULL} when no
+#'     pairs are specified.}
 #'   \item{n_subjects}{Number of unique subjects.}
 #'   \item{n_observations}{Number of observation rows (EVID==0, MDV==0).}
 #' }
@@ -100,6 +128,10 @@ assess_data_quality <- function(
     tad_bin_width           = NULL,
     conc_increase_threshold = 2.0,
     conc_floor              = 0,
+    covariate_pairs         = NULL,
+    pair_method             = "loess",
+    loess_span              = 0.75,
+    min_subjects_pair       = 15L,
     verbose                 = TRUE
 ) {
   # -- Validate columns ---------------------------------------------------------
@@ -135,6 +167,41 @@ assess_data_quality <- function(
     if (length(covariate_cols) > 0) {
       cov_outliers <- .flag_covariate_outliers(data, id_col, covariate_cols, iqr_multiplier)
     }
+  }
+
+  # -- Expand covariate_pairs = "all" -------------------------------------------
+  if (is.character(covariate_pairs) && length(covariate_pairs) == 1L &&
+      covariate_pairs == "all") {
+    cont <- if (!is.null(covariate_cols)) covariate_cols else character(0L)
+    cat_cols <- if (!is.null(categorical_cols)) categorical_cols else character(0L)
+    all_cols <- union(cont, cat_cols)
+    if (length(all_cols) < 2L) {
+      stop(
+        'covariate_pairs = "all" requires at least 2 columns across ',
+        "covariate_cols and categorical_cols."
+      )
+    }
+    # Generate all 2-combinations, then drop categorical x categorical
+    combos <- utils::combn(all_cols, 2, simplify = FALSE)
+    combos <- Filter(function(p) {
+      !(p[1L] %in% cat_cols && p[2L] %in% cat_cols)
+    }, combos)
+    if (length(combos) == 0L) {
+      stop('covariate_pairs = "all" produced no valid pairs (need at least one continuous column).')
+    }
+    covariate_pairs <- combos
+  }
+
+  # -- Covariate pair (bivariate) outliers --------------------------------------
+  cov_pair_outliers <- NULL
+  cov_pair_scatter  <- NULL
+  if (!is.null(covariate_pairs) && length(covariate_pairs) > 0) {
+    pair_result <- .flag_covariate_pair_outliers(
+      data, id_col, covariate_pairs, pair_method,
+      iqr_multiplier, loess_span, min_subjects_pair, categorical_cols
+    )
+    cov_pair_outliers <- pair_result$flagged
+    cov_pair_scatter  <- pair_result$scatter
   }
 
   # -- Resolve TAD for observations ---------------------------------------------
@@ -191,6 +258,11 @@ assess_data_quality <- function(
     } else {
       message("  Covariate outliers flagged      : none")
     }
+    if (!is.null(cov_pair_outliers) && nrow(cov_pair_outliers) > 0) {
+      message(sprintf("  Covariate pair outliers flagged : %d subjects", length(unique(cov_pair_outliers[[id_col]]))))
+    } else if (!is.null(covariate_pairs) && length(covariate_pairs) > 0) {
+      message("  Covariate pair outliers flagged : none")
+    }
     if (!is.null(conc_bin_outliers) && nrow(conc_bin_outliers) > 0) {
       message(sprintf(
         "  Concentration TAD-bin outliers  : %d observations", nrow(conc_bin_outliers)
@@ -216,12 +288,15 @@ assess_data_quality <- function(
       concentration_bin_outliers = conc_bin_outliers,
       conc_scatter_data          = conc_scatter_data,
       concentration_flags        = conc_flags,
+      covariate_pair_outliers    = cov_pair_outliers,
+      covariate_pair_scatter     = cov_pair_scatter,
       missing_summary            = miss_summary,
       n_subjects                 = n_subj,
       n_observations             = n_obs,
       columns                    = columns,
       covariate_cols             = covariate_cols,
       categorical_cols           = categorical_cols,
+      covariate_pairs            = covariate_pairs,
       iqr_multiplier             = iqr_multiplier,
       tad_bin_width              = tad_bin_width,
       tad_label                  = tad_label
@@ -241,6 +316,10 @@ print.irxclean_quality <- function(x, ...) {
   cat(sprintf("  Observations              : %d\n", x$n_observations))
   n_cov <- if (!is.null(x$covariate_outliers)) nrow(x$covariate_outliers) else 0L
   cat(sprintf("  Covariate outlier rows    : %d\n", n_cov))
+  n_pair <- if (!is.null(x$covariate_pair_outliers)) nrow(x$covariate_pair_outliers) else 0L
+  if (!is.null(x$covariate_pairs)) {
+    cat(sprintf("  Covariate pair outliers   : %d\n", n_pair))
+  }
   n_bin <- if (!is.null(x$concentration_bin_outliers)) nrow(x$concentration_bin_outliers) else 0L
   cat(sprintf("  Concentration bin outliers: %d\n", n_bin))
   n_cf  <- if (!is.null(x$concentration_flags)) nrow(x$concentration_flags) else 0L
@@ -360,6 +439,112 @@ plot.irxclean_quality <- function(x, ...) {
       ) +
       ggplot2::facet_wrap(~COVARIATE, scales = "free") +
       .clean_theme()
+  }
+
+  # Covariate pair scatter plots
+  if (!is.null(x$covariate_pair_scatter) && nrow(x$covariate_pair_scatter) > 0) {
+    id_col <- x$columns$ID
+    scat   <- x$covariate_pair_scatter
+    pairs  <- unique(scat[, c("Y_COL", "X_COL", "PAIR_TYPE"), drop = FALSE])
+
+    for (i in seq_len(nrow(pairs))) {
+      y_col     <- pairs$Y_COL[i]
+      x_col     <- pairs$X_COL[i]
+      pair_type <- pairs$PAIR_TYPE[i]
+      pair_label <- paste(y_col, "~", x_col)
+      pair_data <- scat[scat$Y_COL == y_col & scat$X_COL == x_col, ]
+
+      scat_normal  <- pair_data[!pair_data$OUTLIER, ]
+      scat_outlier <- pair_data[pair_data$OUTLIER, ]
+
+      if (pair_type == "grouped") {
+        # Categorical x continuous: boxplot + jitter
+        pair_data$X_FACTOR <- factor(pair_data$X_VALUE)
+        scat_normal$X_FACTOR  <- factor(scat_normal$X_VALUE)
+        scat_outlier$X_FACTOR <- factor(scat_outlier$X_VALUE)
+
+        p_pair <- ggplot2::ggplot(
+          pair_data,
+          ggplot2::aes(x = .data$X_FACTOR, y = .data$Y_VALUE)
+        ) +
+          ggplot2::geom_boxplot(
+            outlier.shape = NA,
+            fill   = "#E8F4F8",
+            colour = "#003B4F",
+            alpha  = 0.6
+          ) +
+          ggplot2::geom_jitter(
+            data   = scat_normal,
+            colour = "#003B4F",
+            alpha  = 0.4,
+            size   = 1.5,
+            width  = 0.15
+          ) +
+          ggplot2::geom_point(
+            data   = scat_outlier,
+            colour = "#AD0000",
+            size   = 2.5
+          ) +
+          ggplot2::labs(
+            title    = paste("Covariate pair:", pair_label),
+            subtitle = sprintf(
+              "IQR multiplier = %.1f  |  within-group IQR flagging  |  red = outlier",
+              x$iqr_multiplier
+            ),
+            x = x_col,
+            y = y_col
+          ) +
+          .clean_theme()
+      } else {
+        # Continuous x continuous: scatter + loess
+        p_pair <- ggplot2::ggplot(
+          pair_data,
+          ggplot2::aes(x = .data$X_VALUE, y = .data$Y_VALUE)
+        ) +
+          ggplot2::geom_point(
+            data   = scat_normal,
+            colour = "#003B4F",
+            alpha  = 0.4,
+            size   = 1.5
+          ) +
+          ggplot2::stat_smooth(
+            method = "loess",
+            formula = y ~ x,
+            colour = "#00769E",
+            fill   = "#00769E",
+            alpha  = 0.15,
+            se     = TRUE
+          ) +
+          ggplot2::geom_point(
+            data   = scat_outlier,
+            colour = "#AD0000",
+            size   = 2.5
+          ) +
+          ggplot2::labs(
+            title    = paste("Covariate pair:", pair_label),
+            subtitle = sprintf(
+              "IQR multiplier = %.1f  |  loess residual flagging  |  red = outlier",
+              x$iqr_multiplier
+            ),
+            x = x_col,
+            y = y_col
+          ) +
+          .clean_theme()
+      }
+
+      if (nrow(scat_outlier) > 0) {
+        p_pair <- p_pair +
+          ggplot2::geom_text(
+            data   = scat_outlier,
+            ggplot2::aes(label = .data[[id_col]]),
+            colour = "#AD0000",
+            size   = 2.5,
+            vjust  = -0.7
+          )
+      }
+
+      plots[[paste0("pair_", y_col, "_", x_col)]] <- p_pair
+    }
   }
 
   # Concentration flags
@@ -648,4 +833,290 @@ plot.irxclean_quality <- function(x, ...) {
   out <- do.call(rbind, flagged)
   names(out)[1L] <- id_col
   out
+}
+
+
+#' @keywords internal
+.flag_covariate_pair_outliers <- function(data, id_col, covariate_pairs,
+                                          pair_method, iqr_mult, loess_span,
+                                          min_subjects_pair,
+                                          categorical_cols = NULL) {
+  # Validate pair_method
+  if (!pair_method %in% c("loess", "reference")) {
+    stop("pair_method must be 'loess' or 'reference', got '", pair_method, "'")
+  }
+  if (pair_method == "reference") {
+    stop(
+      "pair_method = 'reference' is not yet implemented.\n",
+      "CDC/WHO growth-chart LMS tables will be added in a future release.\n",
+      "Use pair_method = 'loess' (default) for now."
+    )
+  }
+
+  # Validate covariate_pairs structure
+  if (!is.list(covariate_pairs)) {
+    stop("covariate_pairs must be a list of length-2 character vectors.")
+  }
+  for (i in seq_along(covariate_pairs)) {
+    p <- covariate_pairs[[i]]
+    if (!is.character(p) || length(p) != 2L) {
+      stop(
+        "Each element of covariate_pairs must be a length-2 character vector. ",
+        "Element ", i, " is not."
+      )
+    }
+  }
+
+  cat_cols <- if (!is.null(categorical_cols)) categorical_cols else character(0L)
+
+  # One row per subject
+  all_cov_cols <- unique(unlist(covariate_pairs))
+  present_cols <- intersect(all_cov_cols, names(data))
+  keep_cols <- unique(c(id_col, present_cols))
+  subj_data <- data[!duplicated(data[[id_col]]), keep_cols, drop = FALSE]
+
+  flagged_all  <- list()
+  scatter_all  <- list()
+
+  for (pair in covariate_pairs) {
+    col_a <- pair[1L]
+    col_b <- pair[2L]
+    pair_label <- paste(col_a, "~", col_b)
+
+    # Check columns exist
+    missing_pair_cols <- setdiff(c(col_a, col_b), names(data))
+    if (length(missing_pair_cols) > 0) {
+      warning(
+        "Covariate pair columns not found: ",
+        paste(missing_pair_cols, collapse = ", "),
+        " -- skipping pair ", pair_label
+      )
+      next
+    }
+
+    a_is_cat <- col_a %in% cat_cols
+    b_is_cat <- col_b %in% cat_cols
+
+    if (a_is_cat && b_is_cat) {
+      # Both categorical -- skip
+      warning("Both columns are categorical for pair ", pair_label, " -- skipping.")
+      next
+    }
+
+    if (a_is_cat || b_is_cat) {
+      # Mixed: categorical x continuous -- grouped IQR
+      # Ensure continuous is Y and categorical is the grouping variable
+      if (a_is_cat) {
+        cat_col  <- col_a
+        cont_col <- col_b
+      } else {
+        cat_col  <- col_b
+        cont_col <- col_a
+      }
+      result <- .flag_grouped_pair(
+        subj_data, id_col, cont_col, cat_col, pair_label,
+        iqr_mult, min_subjects_pair
+      )
+    } else {
+      # Both continuous -- loess
+      result <- .fit_loess_pair(
+        subj_data, id_col, col_a, col_b, pair_label,
+        iqr_mult, loess_span, min_subjects_pair
+      )
+    }
+
+    if (is.null(result)) next
+
+    if (!is.null(result$flagged) && nrow(result$flagged) > 0) {
+      flagged_all[[pair_label]] <- result$flagged
+    }
+    if (!is.null(result$scatter) && nrow(result$scatter) > 0) {
+      scatter_all[[pair_label]] <- result$scatter
+    }
+  }
+
+  flagged_df <- if (length(flagged_all) > 0) do.call(rbind, flagged_all) else NULL
+  scatter_df <- if (length(scatter_all) > 0) do.call(rbind, scatter_all) else NULL
+
+  if (!is.null(flagged_df)) rownames(flagged_df) <- NULL
+  if (!is.null(scatter_df)) rownames(scatter_df) <- NULL
+
+  list(flagged = flagged_df, scatter = scatter_df)
+}
+
+
+#' @keywords internal
+.fit_loess_pair <- function(subj_data, id_col, y_col, x_col, pair_label,
+                            iqr_mult, loess_span, min_subjects_pair) {
+  # Subset to complete cases for this pair
+  cc <- stats::complete.cases(subj_data[[y_col]], subj_data[[x_col]])
+  sd <- subj_data[cc, , drop = FALSE]
+
+  if (nrow(sd) < min_subjects_pair) {
+    warning(
+      "Only ", nrow(sd), " subjects with complete data for pair ",
+      pair_label, " (need ", min_subjects_pair, ") -- skipping."
+    )
+    return(NULL)
+  }
+
+  # Loess needs spread in predictor
+  n_unique_x <- length(unique(sd[[x_col]]))
+  if (n_unique_x < 4L) {
+    warning(
+      "Fewer than 4 unique X values for pair ", pair_label, " -- skipping."
+    )
+    return(NULL)
+  }
+
+  # Fit robust loess
+  fit <- tryCatch(
+    stats::loess(
+      stats::as.formula(paste0("`", y_col, "` ~ `", x_col, "`")),
+      data   = sd,
+      span   = loess_span,
+      family = "symmetric"
+    ),
+    error = function(e) {
+      warning("Loess fit failed for pair ", pair_label, ": ", conditionMessage(e))
+      NULL
+    }
+  )
+  if (is.null(fit)) return(NULL)
+
+  predicted <- stats::predict(fit, sd)
+  residuals <- sd[[y_col]] - predicted
+
+  # IQR-based bounds on residuals
+  q1  <- stats::quantile(residuals, 0.25, na.rm = TRUE)
+  q3  <- stats::quantile(residuals, 0.75, na.rm = TRUE)
+  iqr <- q3 - q1
+  lo  <- q1 - iqr_mult * iqr
+  hi  <- q3 + iqr_mult * iqr
+
+  outlier <- !is.na(residuals) & (residuals < lo | residuals > hi)
+
+  # Build scatter data for all subjects in this pair
+  scatter <- data.frame(
+    ID        = sd[[id_col]],
+    Y_COL     = y_col,
+    X_COL     = x_col,
+    Y_VALUE   = sd[[y_col]],
+    X_VALUE   = sd[[x_col]],
+    PREDICTED = predicted,
+    RESIDUAL  = residuals,
+    OUTLIER   = outlier,
+    PAIR_TYPE = "continuous",
+    stringsAsFactors = FALSE
+  )
+  names(scatter)[1L] <- id_col
+
+  # Build flagged data
+  flagged <- NULL
+  if (any(outlier)) {
+    flagged <- data.frame(
+      ID          = sd[[id_col]][outlier],
+      Y_COL       = y_col,
+      X_COL       = x_col,
+      Y_VALUE     = sd[[y_col]][outlier],
+      X_VALUE     = sd[[x_col]][outlier],
+      PREDICTED   = predicted[outlier],
+      RESIDUAL    = residuals[outlier],
+      LOWER_BOUND = as.numeric(lo),
+      UPPER_BOUND = as.numeric(hi),
+      PAIR_TYPE   = "continuous",
+      stringsAsFactors = FALSE
+    )
+    names(flagged)[1L] <- id_col
+  }
+
+  list(flagged = flagged, scatter = scatter)
+}
+
+
+#' @keywords internal
+.flag_grouped_pair <- function(subj_data, id_col, cont_col, cat_col,
+                               pair_label, iqr_mult, min_subjects_pair) {
+  # Subset to complete cases
+  cc <- stats::complete.cases(subj_data[[cont_col]], subj_data[[cat_col]])
+  sd <- subj_data[cc, , drop = FALSE]
+
+  if (nrow(sd) < min_subjects_pair) {
+    warning(
+      "Only ", nrow(sd), " subjects with complete data for pair ",
+      pair_label, " (need ", min_subjects_pair, ") -- skipping."
+    )
+    return(NULL)
+  }
+
+  groups     <- unique(sd[[cat_col]])
+  flagged_l  <- list()
+
+  # Group means serve as "predicted" for scatter data
+  group_means <- stats::setNames(
+    vapply(groups, function(g) mean(sd[[cont_col]][sd[[cat_col]] == g], na.rm = TRUE), numeric(1L)),
+    as.character(groups)
+  )
+
+  predicted <- group_means[as.character(sd[[cat_col]])]
+  residuals <- sd[[cont_col]] - predicted
+  outlier   <- rep(FALSE, nrow(sd))
+
+  for (g in groups) {
+    idx  <- sd[[cat_col]] == g
+    vals <- sd[[cont_col]][idx]
+    if (sum(!is.na(vals)) < 3L) next  # too few in group
+
+    q1  <- stats::quantile(vals, 0.25, na.rm = TRUE)
+    q3  <- stats::quantile(vals, 0.75, na.rm = TRUE)
+    iqr <- q3 - q1
+    lo  <- q1 - iqr_mult * iqr
+    hi  <- q3 + iqr_mult * iqr
+    if (all(vals >= 0, na.rm = TRUE)) lo <- max(lo, 0)
+
+    is_outlier <- !is.na(vals) & (vals < lo | vals > hi)
+    outlier[idx] <- is_outlier
+
+    if (any(is_outlier)) {
+      out_sd <- sd[idx, ][is_outlier, , drop = FALSE]
+      flagged_l[[paste0(pair_label, "_", g)]] <- data.frame(
+        ID          = out_sd[[id_col]],
+        Y_COL       = cont_col,
+        X_COL       = cat_col,
+        Y_VALUE     = out_sd[[cont_col]],
+        X_VALUE     = out_sd[[cat_col]],
+        PREDICTED   = group_means[as.character(g)],
+        RESIDUAL    = out_sd[[cont_col]] - group_means[as.character(g)],
+        LOWER_BOUND = as.numeric(lo),
+        UPPER_BOUND = as.numeric(hi),
+        PAIR_TYPE   = "grouped",
+        stringsAsFactors = FALSE
+      )
+      names(flagged_l[[length(flagged_l)]])[1L] <- id_col
+    }
+  }
+
+  scatter <- data.frame(
+    ID        = sd[[id_col]],
+    Y_COL     = cont_col,
+    X_COL     = cat_col,
+    Y_VALUE   = sd[[cont_col]],
+    X_VALUE   = sd[[cat_col]],
+    PREDICTED = as.numeric(predicted),
+    RESIDUAL  = residuals,
+    OUTLIER   = outlier,
+    PAIR_TYPE = "grouped",
+    stringsAsFactors = FALSE
+  )
+  names(scatter)[1L] <- id_col
+
+  flagged <- if (length(flagged_l) > 0) {
+    out <- do.call(rbind, flagged_l)
+    rownames(out) <- NULL
+    out
+  } else {
+    NULL
+  }
+
+  list(flagged = flagged, scatter = scatter)
 }
